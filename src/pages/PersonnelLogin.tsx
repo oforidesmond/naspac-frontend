@@ -4,9 +4,16 @@ import CardContent from "../components/CardContent";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Carousel from "../components/Carousel";
+import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import axios from "axios";
 
 const PersonnelLogin: React.FC = () => {
+  const [nssNumber, setNssNumber] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   // Define carousel images
   const images: string[] = [
     "/carousel-image-3.png",
@@ -17,8 +24,69 @@ const PersonnelLogin: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+  
+      // Basic validation
+      if (!nssNumber.trim() || !password.trim()) {
+        toast.error("Please enter both Nss number and Password", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
+
+      setIsLoading(true);
+
+       try {
+      const response = await axios.post(
+        "http://localhost:3000/auth/login-personnel", // Replace with your backend URL
+        { nssNumber, password }
+      );
+
+      const { accessToken } = response.data;
+
+      // Decode JWT to get role (assuming role is in payload)
+      const payload = JSON.parse(atob(accessToken.split(".")[1]));
+      const role = payload.role;
+
+      // Check if role is PERSONNEL
+      if (role === "PERSONNEL") {
+        // Store token in localStorage
+        localStorage.setItem("accessToken", accessToken);
+
+        toast.success("Login successful!", {
+          position: "top-right",
+          autoClose: 2000,
+        });
+
+        // Redirect based on role
+        navigate("/");
+      } else {
+        // Show error for unauthorized roles
+        toast.error("Access denied. Personnel only access.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return; // Prevent further execution
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "Invalid credentials. Please try again.";
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-row justify-center w-full min-h-screen relative">
+       {/* Toast Container */}
+      <ToastContainer />
+
       {/* Background Image Carousel */}
       <Carousel images={images} />
 
@@ -45,11 +113,13 @@ const PersonnelLogin: React.FC = () => {
           </div>
 
           {/* Login Form */}
-          <form className="flex flex-col gap-3 sm:gap-4 md:gap-5">
+          <form className="flex flex-col gap-3 sm:gap-4 md:gap-5" onSubmit={handleSubmit}>
             <Input
             className="text-black font-normal"
               placeholder="NSS Number*"
               type="text"
+              value={nssNumber}
+              onChange={(e) => setNssNumber(e.target.value)}
               icon={
                 <svg
                   className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c838d]"
@@ -72,6 +142,8 @@ const PersonnelLogin: React.FC = () => {
             className="text-black font-normal"
               placeholder="Password*"
               type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               icon={
                 <svg
                   className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c838d]"
@@ -142,7 +214,9 @@ const PersonnelLogin: React.FC = () => {
               </a>
             </div>
 
-            <Button className="cursor-pointer" type="submit">Sign In</Button>
+           <Button className="cursor-pointer" type="submit" disabled={isLoading}>
+              {isLoading ? "Signing In..." : "Sign In"}
+            </Button>
           </form>
         </CardContent>
       </Card>
