@@ -5,7 +5,7 @@ import Input from "../components/Input";
 import Button from "../components/Button";
 import Carousel from "../components/Carousel";
 
-const ForgotPassword: React.FC = () => {
+const Onboarding: React.FC = () => {
   // Define carousel images
   const images: string[] = [
     "/carousel-image-3.png",
@@ -35,16 +35,34 @@ const ForgotPassword: React.FC = () => {
               />
             </div>
             <h1 className="font-['Poppins',Helvetica] font-semibold text-black text-xl sm:text-2xl md:text-[28px] tracking-[-0.3px] sm:tracking-[-0.36px] md:tracking-[-0.42px]">
-              Forgot your password?
+              Onboarding
             </h1>
-            <h3 className="font-['Poppins',Helvetica] font-normal text-black text-xs sm:text-xs md:text-xs tracking-[-0.3px] sm:tracking-[-0.36px] p-4 md:tracking-[-0.42px]">
-              Enter your email so that we can send you password reset link
-            </h3>
           </div>
 
           {/* Login Form */}
           <form className="flex flex-col gap-3 sm:gap-4 md:gap-5">
             <Input
+            className="text-black font-normal"
+              placeholder="NSS Number*"
+              type="text"
+              icon={
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c838d]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              }
+            />
+             <Input
             className="text-black font-normal"
               placeholder="Email*"
               type="email"
@@ -71,20 +89,7 @@ const ForgotPassword: React.FC = () => {
             </svg>
           }
             />
-            <Button className="cursor-pointer" type="submit">Send Email</Button>
-
-             <div className="text-right">
-               <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  history.back();
-                }}
-                className="font-['Poppins',Helvetica] text-xs sm:text-sm text-[#5b3418] hover:underline"
-              >
-                Back to login
-              </a>
-            </div>
+            <Button className="cursor-pointer" type="submit">Submit</Button>
           </form>
         </CardContent>
       </Card>
@@ -92,4 +97,4 @@ const ForgotPassword: React.FC = () => {
   );
 };
 
-export default ForgotPassword;
+export default Onboarding;
