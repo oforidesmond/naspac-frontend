@@ -1,19 +1,75 @@
-import React from "react";
+import React, { useState } from "react";
 import Card from "../components/Card";
 import CardContent from "../components/CardContent";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Carousel from "../components/Carousel";
+import { toast, ToastContainer } from "react-toastify";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const ForgotPassword: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
   // Define carousel images
   const images: string[] = [
     "/carousel-image-3.png",
     "/carousel-image-4.png",
   ];
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Client-side validation
+    if (!email.trim()) {
+      toast.error("Please enter an email address", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+     try {
+      const response = await axios.post(
+        "http://localhost:3000/auth/request-forgot-password", // Replace with your backend URL
+        { email }
+      );
+
+      toast.success(response.data.message || "If an account exists, a reset link will be sent", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+
+      setTimeout(() => navigate(-1), 3000);
+      } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || "Failed to send reset link. Please try again.";
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-row justify-center w-full min-h-screen relative">
+      {/* Toast Container */}
+      <ToastContainer />
       {/* Background Image Carousel */}
       <Carousel images={images} />
 
@@ -43,11 +99,13 @@ const ForgotPassword: React.FC = () => {
           </div>
 
           {/* Login Form */}
-          <form className="flex flex-col gap-3 sm:gap-4 md:gap-5">
+          <form className="flex flex-col gap-3 sm:gap-4 md:gap-5"onSubmit={handleSubmit}>
             <Input
             className="text-black font-normal"
               placeholder="Email*"
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               icon={
             <svg
               className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c838d]"
@@ -71,14 +129,15 @@ const ForgotPassword: React.FC = () => {
             </svg>
           }
             />
-            <Button className="cursor-pointer" type="submit">Send Email</Button>
-
+            <Button className="cursor-pointer" type="submit" disabled={isLoading}>
+              {isLoading ? "Sending..." : "Send Email"}
+            </Button>
              <div className="text-right">
                <a
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  history.back();
+                  navigate(-1);
                 }}
                 className="font-['Poppins',Helvetica] text-xs sm:text-sm text-[#5b3418] hover:underline"
               >

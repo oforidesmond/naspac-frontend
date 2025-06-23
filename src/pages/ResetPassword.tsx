@@ -32,14 +32,14 @@ const ResetPassword: React.FC = () => {
 
   // Check for missing URL parameters
   useEffect(() => {
-    if (!nssNumber || !token) {
+    if (!token) {
       toast.error("Invalid or missing reset link. Please check your email.", {
         position: "top-right",
         autoClose: 3000,
       });
       setTimeout(() => navigate("/personnel-login"), 3000); // Redirect to login after 3s
     }
-  }, [nssNumber, token, navigate]);
+  }, [token, navigate]);
 
   // Evaluate password strength with zxcvbn
   useEffect(() => {
@@ -92,7 +92,7 @@ const ResetPassword: React.FC = () => {
     }
 
     if (passwordStrength.score < 3) {
-      toast.error("Password is too weak. Use a stronger password with letters, numbers, and symbols.", {
+      toast.error("Password is too weak. Must include 8+ characters, numbers, and letters.", {
         position: "top-right",
         autoClose: 3000,
       });
@@ -102,16 +102,19 @@ const ResetPassword: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/auth/onboarding-reset-password", // Replace with your backend URL
-        { nssNumber, token, password, confirmPassword }
-      );
+        const endpoint = nssNumber
+        ? "http://localhost:3000/auth/onboarding-reset-password"
+        : "http://localhost:3000/auth/forgot-password";
+      const payload = nssNumber
+        ? { nssNumber, token, password, confirmPassword }
+        : { token, password };
+
+      const response = await axios.post(endpoint, payload);
 
       toast.success(response.data.message || "Password set successfully!", {
         position: "top-right",
         autoClose: 2000,
       });
-
       // Redirect to login page after success
       setTimeout(() => navigate("/personnel-login"), 2000);
     } catch (error: any) {
