@@ -8,6 +8,7 @@ import Onboarding from './pages/Onboarding';
 import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import { AuthProvider } from './AuthContext';
 
 const MainLayout: React.FC = () => {
   return (
@@ -29,6 +30,7 @@ const MainLayout: React.FC = () => {
 
 function App() {
   return (
+    <AuthProvider>
     <Router>
       <Routes>
         {/* Routes with Header and Sidebar */}
@@ -43,6 +45,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }
 

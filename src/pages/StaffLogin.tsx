@@ -7,12 +7,14 @@ import CardContent from "../components/CardContent";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Carousel from "../components/Carousel";
+import { useAuth } from "../AuthContext";
 
 const StaffLogin: React.FC = () => {
   const [staffId, setStaffId] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { setRole } = useAuth();
   const navigate = useNavigate();
 
   // Define carousel images
@@ -50,6 +52,7 @@ const StaffLogin: React.FC = () => {
 
       // Check if role is STAFF or ADMIN
       if (role === "ADMIN" || role === "STAFF") {
+        setRole(role);
         // Store token in localStorage
         localStorage.setItem("accessToken", accessToken);
 

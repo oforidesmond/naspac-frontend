@@ -75,7 +75,7 @@ const Sidebar: React.FC = () => {
       collapsible
       collapsed={collapsed}
       trigger={null}
-      className="sidebar-container bg-[#5b3418] rounded-tr-[25px] overflow-hidden z-40"
+      className="sidebar-container bg-[#5B3418] rounded-tr-[25px] overflow-hidden z-40"
       breakpoint="lg"
       onBreakpoint={(broken) => setCollapsed(broken)}
     >

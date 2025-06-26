@@ -7,12 +7,14 @@ import Carousel from "../components/Carousel";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
+import { useAuth } from "../AuthContext";
 
 const PersonnelLogin: React.FC = () => {
   const [nssNumber, setNssNumber] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { setRole } = useAuth();
   const navigate = useNavigate();
   // Define carousel images
   const images: string[] = [
@@ -52,6 +54,7 @@ const PersonnelLogin: React.FC = () => {
 
       // Check if role is PERSONNEL
       if (role === "PERSONNEL") {
+        setRole(role);
         // Store token in localStorage
         localStorage.setItem("accessToken", accessToken);
 
