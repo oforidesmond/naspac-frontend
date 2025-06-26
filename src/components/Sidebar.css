@@ -1,0 +1,171 @@
+/* Sidebar.css */
+
+/* Ensure Sider has the correct background and layout */
+.sidebar-container {
+  background: #5b3418 !important;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  transition: width 0.3s ease;
+}
+
+/* Remove default Menu background and borders */
+.ant-menu {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Style navigation menu */
+.nav-menu {
+  margin-top: 1.5rem;
+  padding: 0 1rem;
+}
+
+/* Style settings menu */
+.settings-menu {
+  margin-top: auto;
+  padding: 0 1rem;
+  position: absolute;
+  bottom: 4.5rem;
+  width: 100%;
+}
+
+/* Style menu items */
+.ant-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem 1rem !important;
+  margin: 0.75rem 0 !important;
+  border-radius: 4px !important;
+  width: 100%;
+  color: white !important;
+  /* gap: 0.10rem; */
+  min-height: 2.5rem !important;
+  line-height: 1.5 !important;
+  transition: background-color 0.2s ease;
+}
+
+/* Ensure consistent icon alignment in collapsed state */
+.ant-menu-item .ant-menu-item-icon {
+  display: flex;
+  justify-content: center;
+  width: 1.25rem; /* Fixed width for icons */
+}
+
+/* Active menu item */
+.ant-menu-item-selected {
+  background-color: #754726 !important;
+}
+
+/* Hover effect for menu items */
+.ant-menu-item:hover {
+  background-color: #6b3e1d !important;
+  color: white !important;
+}
+
+/* Icon styling */
+.sidebar-icon {
+  font-size: 1.25rem !important;
+  color: white !important;
+  margin-right: 0.75rem !important;
+  transition: font-size 0.3s ease;
+}
+
+/* Collapsed state adjustments */
+.ant-layout-sider-collapsed .ant-menu-item {
+  justify-content: center;
+  padding: 0.5rem !important;
+}
+
+.ant-layout-sider-collapsed .ant-menu-item .ant-menu-item-icon {
+  margin-right: 0 !important;
+}
+
+.ant-layout-sider-collapsed .sidebar-icon {
+  font-size: 1.5rem !important;
+}
+
+/* Logout button styling */
+.logout-button {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1rem;
+  right: 1rem;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.ant-layout-sider-collapsed .logout-button {
+  justify-content: center;
+  padding: 0.5rem !important;
+}
+
+/* Ensure button has correct hover state */
+.ant-btn-default {
+  background: transparent !important;
+  border-color: #a9a7a7 !important;
+  color: white !important;
+}
+
+.ant-btn-default:hover {
+  background-color: #6b3e1d !important;
+  border-color: #a9a7a7 !important;
+  color: white !important;
+}
+
+/* Ensure button icon stays white on hover */
+.ant-btn-default:hover .sidebar-icon {
+  color: white !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sidebar-container {
+   width: 80px !important;
+  }
+
+  .ant-menu-item {
+    padding: 0.5rem 0.75rem !important;
+    min-height: 2.25rem !important;
+  }
+
+  .sidebar-icon {
+    font-size: 1.1rem !important;
+  }
+
+  .logout-button {
+    left: 0.5rem;
+    right: 0.5rem;
+    padding: 0.5rem !important;
+  }
+
+  .nav-menu,
+  .settings-menu {
+    padding: 0 0.5rem;
+  }
+
+  .ant-menu-item .truncate {
+    max-width: 150px; /* Prevent overflow on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-container {
+    width: 100% !important;
+    max-width: 260px !important;
+  }
+
+  .ant-menu-item {
+    padding: 0.5rem !important;
+  }
+
+  .sidebar-icon {
+    font-size: 1rem !important;
+  }
+
+  .ant-menu-item .truncate {
+    max-width: 100px;
+  }
+}

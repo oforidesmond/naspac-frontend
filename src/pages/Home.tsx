@@ -1,15 +1,16 @@
 import React from 'react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 const Home: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <h1 className="text-3xl font-bold text-blue-600">Welcome to Cocobod NSS</h1>
-    </div>
-      <Footer />
+    <div className="bg-gray-100 h-full p-4 sm:p-6">
+      <h2 className="text-xl sm:text-2xl font-['Kumbh_Sans',Helvetica] font-semibold">
+        Dashboard
+      </h2>
+      <p className="mt-4 text-sm sm:text-base">
+        Welcome to your dashboard. This content adjusts to the sidebar’s width and
+        screen size.
+      </p>
+      {/* Add more content as needed */}
     </div>
   );
 };
