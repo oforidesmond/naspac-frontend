@@ -27,7 +27,7 @@
   margin-top: auto;
   padding: 0 1rem;
   position: absolute;
-  bottom: 4.5rem;
+  bottom: 2.5rem;
   width: 100%;
 }
 
@@ -85,12 +85,13 @@
 
 .ant-layout-sider-collapsed .sidebar-icon {
   font-size: 1.5rem !important;
+  margin-left: 6px !important;
 }
 
 /* Logout button styling */
 .logout-button {
   position: absolute;
-  bottom: 1.5rem;
+  bottom: 0.5rem;
   left: 1rem;
   right: 1rem;
   justify-content: center;
