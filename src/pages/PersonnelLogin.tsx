@@ -6,7 +6,6 @@ import Button from "../components/Button";
 import Carousel from "../components/Carousel";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
-import axios from "axios";
 import { useAuth } from "../AuthContext";
 
 const PersonnelLogin: React.FC = () => {
@@ -40,44 +39,33 @@ const PersonnelLogin: React.FC = () => {
 
       setIsLoading(true);
 
-       try {
-      const response = await axios.post(
-        "http://localhost:3000/auth/login-personnel", // Replace with your backend URL
-        { nssNumber, password }
-      );
+      try {
+      const response = await fetch('http://localhost:3000/auth/login-personnel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nssNumber, password }),
+        credentials: 'include',
+      });
 
-      const { accessToken } = response.data;
+      const data = await response.json();
 
-      // Decode JWT to get role (assuming role is in payload)
-      const payload = JSON.parse(atob(accessToken.split(".")[1]));
-      const role = payload.role;
-
-      // Check if role is PERSONNEL
-      if (role === "PERSONNEL") {
-        setRole(role);
-        // Store token in localStorage
-        localStorage.setItem("accessToken", accessToken);
-
-        toast.success("Login successful!", {
-          position: "top-right",
+      if (data.accessToken) {
+        localStorage.setItem('token', data.accessToken);
+        setRole('PERSONNEL');
+        toast.success('Login successful!', {
+          position: 'top-right',
           autoClose: 2000,
         });
-
-        // Redirect based on role
-        navigate("/");
+        navigate('/');
       } else {
-        // Show error for unauthorized roles
-        toast.error("Access denied. Personnel only access.", {
-          position: "top-right",
+        toast.error(data.message || 'Invalid credentials. Please try again.', {
+          position: 'top-right',
           autoClose: 3000,
         });
-        return; // Prevent further execution
       }
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message || "Invalid credentials. Please try again.";
-      toast.error(errorMessage, {
-        position: "top-right",
+    } catch (error) {
+      toast.error('Login failed. Please try again.', {
+        position: 'top-right',
         autoClose: 3000,
       });
     } finally {

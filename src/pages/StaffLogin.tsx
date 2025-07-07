@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import Card from "../components/Card";
 import CardContent from "../components/CardContent";
@@ -38,51 +37,39 @@ const StaffLogin: React.FC = () => {
 
     setIsLoading(true);
 
-     try {
-      const response = await axios.post(
-        "http://localhost:3000/auth/login-staff-admin", // Replace with your backend URL
-        { staffId, password }
-      );
+    try {
+  const response = await fetch('http://localhost:3000/auth/login-staff-admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ staffId, password }),
+    credentials: 'include',
+  });
 
-      const { accessToken } = response.data;
+  const data = await response.json();
 
-      // Decode JWT to get role (assuming role is in payload)
-      const payload = JSON.parse(atob(accessToken.split(".")[1]));
-      const role = payload.role;
-
-      // Check if role is STAFF or ADMIN
-      if (role === "ADMIN" || role === "STAFF") {
-        setRole(role);
-        // Store token in localStorage
-        localStorage.setItem("accessToken", accessToken);
-
-        toast.success("Login successful!", {
-          position: "top-right",
-          autoClose: 2000,
-        });
-
-        // Redirect based on role
-        navigate("/");
-      } else {
-        // Show error for unauthorized roles
-        toast.error("Access denied. Staff only access.", {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        return; // Prevent further execution
-      }
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message || "Invalid credentials. Please try again.";
-      toast.error(errorMessage, {
-        position: "top-right",
-        autoClose: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  if (data.accessToken && (data.role === 'ADMIN' || data.role === 'STAFF')) {
+    localStorage.setItem('token', data.accessToken);
+    setRole(data.role);
+    toast.success('Login successful!', {
+      position: 'top-right',
+      autoClose: 2000,
+    });
+    navigate('/');
+  } else {
+    toast.error('Access denied. Staff only access.', {
+      position: 'top-right',
+      autoClose: 3000,
+    });
+  }
+} catch (error) {
+  toast.error('Login failed. Please try again.', {
+    position: 'top-right',
+    autoClose: 3000,
+  });
+} finally {
+  setIsLoading(false);
+}
+  }
 
   return (
     <div className="flex flex-row justify-center w-full min-h-screen relative">

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import PersonnelLogin from './pages/PersonnelLogin'
 import StaffLogin from './pages/StaffLogin';
@@ -8,7 +8,20 @@ import Onboarding from './pages/Onboarding';
 import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import { AuthProvider } from './AuthContext';
+import { AuthProvider, useAuth } from './AuthContext';
+import OnboardingForm from './pages/OnboardingForm';
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { role, isLoading } = useAuth();
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (!role) {
+    console.log('No role, redirecting to /login');
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
 
 const MainLayout: React.FC = () => {
   return (
@@ -20,7 +33,7 @@ const MainLayout: React.FC = () => {
         {/* Header */}
         <Header />
         {/* Page content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 mt-[60px] ml-[2px] collapsed:ml-[80px]">
+        <main className="flex-1 p-4 bg-[#FCEEE9] sm:p-6 lg:p-8 mt-[35px] ml-[2px] collapsed:ml-[60px]">
           <Outlet /> {/* Renders Home, Onboarding, etc. */}
         </main>
       </div>
@@ -35,8 +48,28 @@ function App() {
       <Routes>
         {/* Routes with Header and Sidebar */}
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/onboarding" element={<Onboarding />} />
+           <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+           <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding/>
+                </ProtectedRoute>
+              }
+            />
+              <Route
+              path="/onboarding-form"
+              element={
+                  <OnboardingForm/>
+              }
+            />
         </Route>
         {/* Routes without Header and Sidebar */}
         <Route path="/login" element={<PersonnelLogin />} />
