@@ -1,45 +1,67 @@
-import React, { useState } from "react";
-import Card from "../components/Card";
-import CardContent from "../components/CardContent";
-import Input from "../components/Input";
-import Button from "../components/Button";
-import Carousel from "../components/Carousel";
-import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import { useAuth } from "../AuthContext";
+import React, { useState } from 'react';
+import Card from '../components/Card';
+import CardContent from '../components/CardContent';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import Carousel from '../components/Carousel';
+import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import { useAuth } from '../AuthContext';
 
 const PersonnelLogin: React.FC = () => {
-  const [nssNumber, setNssNumber] = useState("");
-  const [password, setPassword] = useState("");
+  const [nssNumber, setNssNumber] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { setRole } = useAuth();
   const navigate = useNavigate();
+
   // Define carousel images
-  const images: string[] = [
-    "/carousel-image-3.png",
-    "/carousel-image-4.png",
-  ];
+  const images: string[] = ['/carousel-image-3.png', '/carousel-image-4.png'];
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-  
-      // Basic validation
-      if (!nssNumber.trim() || !password.trim()) {
-        toast.error("Please enter both Nss number and Password", {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        return;
+  const checkOnboardingStatus = async (token: string) => {
+    try {
+      const response = await fetch('http://localhost:3000/users/onboarding-status', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to check onboarding status');
       }
+      return data.hasSubmitted;
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+      toast.error('Failed to verify onboarding status. Please try again.', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+      return null; // Return null to indicate failure
+    }
+  };
 
-      setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-      try {
+    // Basic validation
+    if (!nssNumber.trim() || !password.trim()) {
+      toast.error('Please enter both NSS number and Password', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
       const response = await fetch('http://localhost:3000/auth/login-personnel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,11 +74,25 @@ const PersonnelLogin: React.FC = () => {
       if (data.accessToken) {
         localStorage.setItem('token', data.accessToken);
         setRole('PERSONNEL');
+
+        // Check onboarding status
+        const hasSubmitted = await checkOnboardingStatus(data.accessToken);
+        if (hasSubmitted === null) {
+          // Status check failed, do not proceed with redirection
+          return;
+        }
+
         toast.success('Login successful!', {
           position: 'top-right',
           autoClose: 2000,
         });
-        navigate('/');
+
+        // Redirect based on onboarding status
+        if (hasSubmitted) {
+          navigate('/'); // Redirect to homepage if submitted
+        } else {
+          navigate('/onboarding-form'); // Redirect to onboarding form if not submitted
+        }
       } else {
         toast.error(data.message || 'Invalid credentials. Please try again.', {
           position: 'top-right',
@@ -75,7 +111,7 @@ const PersonnelLogin: React.FC = () => {
 
   return (
     <div className="flex flex-row justify-center w-full min-h-screen relative">
-       {/* Toast Container */}
+      {/* Toast Container */}
       <ToastContainer />
 
       {/* Background Image Carousel */}
@@ -106,7 +142,7 @@ const PersonnelLogin: React.FC = () => {
           {/* Login Form */}
           <form className="flex flex-col gap-3 sm:gap-4 md:gap-5" onSubmit={handleSubmit}>
             <Input
-            className="text-black font-normal"
+              className="text-black font-normal"
               placeholder="NSS Number*"
               type="text"
               value={nssNumber}
@@ -129,30 +165,30 @@ const PersonnelLogin: React.FC = () => {
               }
             />
             <div className="relative">
-            <Input
-            className="text-black font-normal"
-              placeholder="Password*"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              icon={
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c838d]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 11c0 1.104-.896 2-2 2s-2-.896-2-2 2-5 2-5 2 3.896 2 5zm0 0c0 1.104-.896 2-2 2s-2-.896-2-2m2 2v7m7-7c0 1.104-.896 2-2 2s-2-.896-2-2 2-5 2-5 2 3.896 2 5zm0 0c0 1.104-.896 2-2 2s-2-.896-2-2m2 2v7"
-                  />
-                </svg>
-              }
-            />
-             <button
+              <Input
+                className="text-black font-normal"
+                placeholder="Password*"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                icon={
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c838d]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 11c0 1.104-.896 2-2 2s-2-.896-2-2 2-5 2-5 2 3.896 2 5zm0 0c0 1.104-.896 2-2 2s-2-.896-2-2m2 2v7m7-7c0 1.104-.896 2-2 2s-2-.896-2-2 2-5 2-5 2 3.896 2 5zm0 0c0 1.104-.896 2-2 2s-2-.896-2-2m2 2v7"
+                    />
+                  </svg>
+                }
+              />
+              <button
                 type="button"
                 onClick={togglePasswordVisibility}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#7c838d] cursor-pointer"
@@ -205,8 +241,8 @@ const PersonnelLogin: React.FC = () => {
               </a>
             </div>
 
-           <Button className="cursor-pointer" type="submit" disabled={isLoading}>
-              {isLoading ? "Signing In..." : "Sign In"}
+            <Button className="cursor-pointer" type="submit" disabled={isLoading}>
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
         </CardContent>
