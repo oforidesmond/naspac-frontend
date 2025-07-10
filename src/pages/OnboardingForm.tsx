@@ -39,10 +39,10 @@ const OnboardingForm: React.FC = () => {
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log('JWT Payload:', payload);
+        // console.log('JWT Payload:', payload);
         form.setFieldsValue({ nssNumber: payload.identifier, email: payload.email || '' });
       } catch (error) {
-        console.error('Failed to decode JWT:', error);
+        // console.error('Failed to decode JWT:', error);
         toast.error('Failed to load user data');
       }
     }
@@ -93,7 +93,7 @@ const OnboardingForm: React.FC = () => {
           setCanSubmit(true); // Allow submission only if no prior submission
         }
       } catch (error) {
-        console.error('Error checking onboarding status:', error);
+        // console.error('Error checking onboarding status:', error);
         toast.error('Failed to verify onboarding status. Submission is not allowed.');
         setCanSubmit(false);
         navigate('/login');
@@ -137,7 +137,6 @@ const OnboardingForm: React.FC = () => {
   };
 
   const onFinish = async (values: any) => {
-
      const hasSubmitted = await checkOnboardingStatus();
     if (hasSubmitted) {
       toast.error('Already submitted.');
@@ -148,8 +147,8 @@ const OnboardingForm: React.FC = () => {
     const formData = new FormData();
     formData.append('fullName', values.fullName);
     formData.append('nssNumber', values.nssNumber);
-    formData.append('email', values.email);
     formData.append('gender', values.gender);
+    formData.append('email', values.email);
     formData.append('placeOfResidence', values.placeOfResidence);
     formData.append('phoneNumber', values.phoneNumber);
     formData.append('universityAttended', values.universityAttended);
@@ -158,12 +157,16 @@ const OnboardingForm: React.FC = () => {
     formData.append('programStudied', values.programStudied);
     formData.append('divisionPostedTo', values.divisionPostedTo);
 
-    if (values.postingLetter?.file) {
-      formData.append('files', values.postingLetter.file, 'postingLetter');
-    }
-    if (values.appointmentLetter?.file) {
-      formData.append('files', values.appointmentLetter.file, 'appointmentLetter');
-    }
+    if (values.postingLetter) {
+    formData.append('files', values.postingLetter, 'postingLetter');
+  } else {
+    console.log('No postingLetter file found');
+  }
+   if (values.appointmentLetter) {
+    formData.append('files', values.appointmentLetter, 'appointmentLetter');
+  } else {
+    console.log('No appointmentLetter file found');
+  }
 
     try {
       const response = await fetch('http://localhost:3000/users/submit-onboarding', {
@@ -180,9 +183,11 @@ const OnboardingForm: React.FC = () => {
         toast.success('Submitted successfully!');
         navigate('/');
       } else {
+         console.error('Server response:', data);
         toast.error(data.message || 'Failed to submit');
       }
     } catch (error) {
+          console.error('Submission error:', error);
       toast.error('Submission failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -294,13 +299,18 @@ const OnboardingForm: React.FC = () => {
               }
             />
           </Form.Item>
-          <Form.Item
-            name="yearOfNss"
-            label="Year of NSS"
-            rules={[{ required: true, message: 'Please input the NSS year!' }]}
-          >
-            <Input type="number" min={0} className="rounded-md border-[#a9a7a7]" />
-          </Form.Item>
+        <Form.Item
+          name="yearOfNss"
+          label="Year of NSS"
+          initialValue={new Date().getFullYear()}
+          rules={[{ required: true, message: 'Please input the NSS year!' }]}
+        >
+          <Input
+            type="number"
+            disabled
+            className="rounded-md border-[#a9a7a7]"
+          />
+        </Form.Item>
           <Form.Item
             name="programStudied"
             label="Program Studied"
