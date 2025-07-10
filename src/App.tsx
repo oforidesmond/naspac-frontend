@@ -56,14 +56,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-           <Route
-              path="/onboarding"
-              element={
-                <ProtectedRoute>
-                  <Onboarding/>
-                </ProtectedRoute>
-              }
-            />
               <Route
               path="/onboarding-form"
               element={
@@ -76,6 +68,14 @@ function App() {
         <Route path="/staff-login" element={<StaffLogin />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+              path="/可可入职用户入门指南"
+              element={
+                <ProtectedRoute>
+                  <Onboarding/>
+                </ProtectedRoute>
+              }
+            />
       </Routes>
     </Router>
     </AuthProvider>

@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Card from "../components/Card";
 import CardContent from "../components/CardContent";
 import Input from "../components/Input";
@@ -14,6 +15,53 @@ const Onboarding: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+
+  // Security features to restrict navigation
+  useEffect(() => {
+    // 1. Enter full-screen mode to hide browser controls
+    const goFullScreen = () => {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.log("Fullscreen request failed:", err);
+        });
+      }
+    };
+    goFullScreen();
+
+    // 2. Trap navigation with popstate to prevent back/forward
+    const trapNavigation = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
+    window.history.pushState(null, "", window.location.href); // Initial state
+    window.addEventListener("popstate", trapNavigation);
+
+    // 3. Disable right-click (context menu)
+    const preventContextMenu = (e: Event) => e.preventDefault();
+    document.addEventListener("contextmenu", preventContextMenu);
+
+    // 4. Block keyboard shortcuts
+    const preventShortcuts = (e: KeyboardEvent) => {
+      if (
+        e.ctrlKey || // Ctrl+anything (e.g., Ctrl+T, Ctrl+R)
+        e.altKey || // Alt+anything (e.g., Alt+Left for back)
+        ["F12", "Escape", "Backspace"].includes(e.key) || // Dev tools, Escape, Backspace
+        (e.metaKey && ["t", "n", "r"].includes(e.key.toLowerCase())) // Cmd+T, Cmd+N, Cmd+R (Mac)
+      ) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", preventShortcuts);
+
+    // Cleanup on component unmount
+    return () => {
+      window.removeEventListener("popstate", trapNavigation);
+      document.removeEventListener("contextmenu", preventContextMenu);
+      document.removeEventListener("keydown", preventShortcuts);
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch((err) => console.log("Exit fullscreen failed:", err));
+      }
+    };
+  }, []);
 
   // Define carousel images
   const images: string[] = ["/carousel-image-3.png", "/carousel-image-4.png"];
@@ -40,7 +88,7 @@ const Onboarding: React.FC = () => {
     }
 
     // Check for valid token
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("You must be logged in to initiate onboarding", {
         position: "top-right",
@@ -49,18 +97,18 @@ const Onboarding: React.FC = () => {
       navigate("/staff-login");
       return;
     }
-     // Show confirmation modal
+    // Show confirmation modal
     setShowModal(true);
   };
 
-     const handleConfirm = async () => {
+  const handleConfirm = async () => {
     setIsLoading(true);
     setShowModal(false);
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:3000/auth/init-onboarding", // Replace with your backend URL
+        "http://localhost:3000/auth/init-onboarding",
         { nssNumber, email },
         {
           headers: {
@@ -75,10 +123,8 @@ const Onboarding: React.FC = () => {
       });
 
       // Clear form fields
-    setNssNumber("");
-    setEmail("");
-      // Redirect to a dashboard or success page
-      // navigate("/dashboard"); Adjust route as needed
+      setNssNumber("");
+      setEmail("");
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Failed to initiate onboarding. Please try again.";
@@ -87,32 +133,29 @@ const Onboarding: React.FC = () => {
         autoClose: 3000,
       });
 
-      // Redirect to login if unauthorized (e.g., invalid/expired token)
+      // Handle unauthorized (401) without redirect
       if (error.response?.status === 401) {
-        localStorage.removeItem("accessToken");
-        navigate("/staff-login");
+        toast.error("Session expired. Please log in again.", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        localStorage.removeItem("token");
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-    const handleCancel = () => {
+  const handleCancel = () => {
     setShowModal(false);
   };
 
   return (
-    <div className="flex flex-row justify-center w-full min-h-screen relative">
-      {/* Toast Container */}
+    <div className="flex flex-row justify-center w-full min-h-screen relative onboarding-container">
       <ToastContainer />
-
-      {/* Background Image Carousel */}
       <Carousel images={images} />
-
-      {/* Onboarding Card */}
       <Card className="max-h-[420px]">
         <CardContent className="p-4 sm:p-5 md:p-6">
-          {/* Logos and Welcome Text */}
           <div className="flex flex-col items-center mb-3 sm:mb-3 md:mb-4">
             <div className="flex justify-center gap-1 sm:gap-1.5 mb-1 sm:mb-2 md:mb-3">
               <img
@@ -130,8 +173,6 @@ const Onboarding: React.FC = () => {
               Onboarding
             </h1>
           </div>
-
-          {/* Onboarding Form */}
           <form className="flex flex-col gap-3 sm:gap-4 md:gap-5" onSubmit={handleSubmit}>
             <Input
               className="text-black font-normal"
@@ -191,11 +232,9 @@ const Onboarding: React.FC = () => {
           </form>
         </CardContent>
       </Card>
-
-       {/* Confirmation Modal */}
       {showModal && (
-        <div className="fixed inset-0 backdrop-blur-[13px] flex items-center justify-center z-50">
-          <div className="bg-gray-200 rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 backdrop-blur-[30px] flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="font-['Poppins',Helvetica] font-semibold text-black text-xl text-center mb-4">
               Confirm Details
             </h2>

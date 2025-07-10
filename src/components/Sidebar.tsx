@@ -1,4 +1,3 @@
-// Sidebar.tsx
 import React, { useState } from 'react';
 import { Layout, Menu, Button, Tooltip } from 'antd';
 import {
@@ -9,6 +8,7 @@ import {
   LogoutOutlined,
   MenuOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 import { useAuth } from '../AuthContext';
 
@@ -17,21 +17,25 @@ const { Sider } = Layout;
 const Sidebar: React.FC = () => {
   const { role, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+
+  // Define route mappings for menu items
+  const routeMap: { [key: string]: string } = {
+    '1': '/',
+    '2': role === 'PERSONNEL' ? '/my-details' : '/可可入职用户入门指南',
+    '3': role === 'PERSONNEL' ? '/endorsed-posting-letter' : '/personnel-selection',
+    '4': role === 'PERSONNEL' ? '/upload-nss-document' : role === 'ADMIN' ? '/endorsement' : '/manage-personnel',
+    '5': role === 'PERSONNEL' ? '/appointment-letter' : role === 'ADMIN' ? '/manage-personnel' : '/dept-placements',
+    '6': role === 'ADMIN' ? '/staff-management' : '/profile',
+    '7': role === 'ADMIN' ? '/dept-placements' : '/notices',
+  };
 
   // Role-based menu items
   const getMenuItems = () => {
     if (role === 'ADMIN') {
-       return [
-        {
-          key: '1',
-          icon: <DashboardOutlined className="sidebar-icon" />,
-          label: 'Dashboard',
-        },
-        {
-          key: '2',
-          icon: <UserOutlined className="sidebar-icon" />,
-          label: 'Onboard Personnel',
-        },
+      return [
+        { key: '1', icon: <DashboardOutlined className="sidebar-icon" />, label: 'Dashboard' },
+        { key: '2', icon: <UserOutlined className="sidebar-icon" />, label: 'Onboard Personnel' },
         {
           key: '3',
           icon: <img src="/select-personnel.svg" alt="Personnel Selection" className="sidebar-icon" />,
@@ -60,16 +64,8 @@ const Sidebar: React.FC = () => {
       ];
     } else if (role === 'STAFF') {
       return [
-        {
-          key: '1',
-          icon: <DashboardOutlined className="sidebar-icon" />,
-          label: 'Dashboard',
-        },
-        {
-          key: '2',
-          icon: <UserOutlined className="sidebar-icon" />,
-          label: 'Onboard Personnel',
-        },
+        { key: '1', icon: <DashboardOutlined className="sidebar-icon" />, label: 'Dashboard' },
+        { key: '2', icon: <UserOutlined className="sidebar-icon" />, label: 'Onboard Personnel' },
         {
           key: '3',
           icon: <img src="/select-personnel.svg" alt="Personnel Selection" className="sidebar-icon" />,
@@ -89,17 +85,8 @@ const Sidebar: React.FC = () => {
     }
     // Personnel menu
     return [
-      {
-        key: '1',
-        icon: <DashboardOutlined className="sidebar-icon" />,
-        label: 'Dashboard',
-        isActive: true,
-      },
-      {
-        key: '2',
-        icon: <UserOutlined className="sidebar-icon" />,
-        label: 'My Details',
-      },
+      { key: '1', icon: <DashboardOutlined className="sidebar-icon" />, label: 'Dashboard' },
+      { key: '2', icon: <UserOutlined className="sidebar-icon" />, label: 'My Details' },
       {
         key: '3',
         icon: <PrinterOutlined className="sidebar-icon" />,
@@ -120,20 +107,19 @@ const Sidebar: React.FC = () => {
 
   // Settings menu (same for all roles)
   const settingsItems = [
-    {
-      key: '6',
-      icon: <UserOutlined className="sidebar-icon" />,
-      label: 'Profile',
-    },
-    {
-      key: '7',
-      icon: <BellOutlined className="sidebar-icon" />,
-      label: 'Notices',
-    },
+    { key: '6', icon: <UserOutlined className="sidebar-icon" />, label: 'Profile' },
+    { key: '7', icon: <BellOutlined className="sidebar-icon" />, label: 'Notices' },
   ];
 
   const toggleCollapse = () => {
     setCollapsed(!collapsed);
+  };
+
+  const handleMenuClick = ({ key }: { key: string }) => {
+    const path = routeMap[key];
+    if (path) {
+      navigate(path);
+    }
   };
 
   return (
@@ -164,6 +150,7 @@ const Sidebar: React.FC = () => {
       <Menu
         mode="inline"
         defaultSelectedKeys={['1']}
+        onClick={handleMenuClick}
         items={getMenuItems().map((item) => ({
           key: item.key,
           icon: item.icon,
@@ -180,6 +167,7 @@ const Sidebar: React.FC = () => {
 
       <Menu
         mode="inline"
+        onClick={handleMenuClick}
         items={settingsItems.map((item) => ({
           key: item.key,
           icon: item.icon,

@@ -37,7 +37,7 @@ const ResetPassword: React.FC = () => {
         position: "top-right",
         autoClose: 3000,
       });
-      setTimeout(() => navigate("/personnel-login"), 3000); // Redirect to login after 3s
+      setTimeout(() => navigate("/login"), 3000); // Redirect to login after 3s
     }
   }, [token, navigate]);
 
@@ -116,7 +116,7 @@ const ResetPassword: React.FC = () => {
         autoClose: 2000,
       });
       // Redirect to login page after success
-      setTimeout(() => navigate("/personnel-login"), 2000);
+      setTimeout(() => navigate("/login"), 2000);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Failed to reset password. Please try again.";
