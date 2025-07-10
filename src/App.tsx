@@ -10,6 +10,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import { AuthProvider, useAuth } from './AuthContext';
 import OnboardingForm from './pages/OnboardingForm';
+import PersonnelSelection from './pages/PersonnelSelection';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { role, isLoading } = useAuth();
@@ -60,6 +61,14 @@ function App() {
               path="/onboarding-form"
               element={
                   <OnboardingForm/>
+              }
+            />
+            <Route
+              path="/personnel-selection"
+              element={
+                <ProtectedRoute>
+                  <PersonnelSelection />
+                </ProtectedRoute>
               }
             />
         </Route>
