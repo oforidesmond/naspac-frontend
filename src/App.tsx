@@ -11,6 +11,7 @@ import Header from './components/Header';
 import { AuthProvider, useAuth } from './AuthContext';
 import OnboardingForm from './pages/OnboardingForm';
 import PersonnelSelection from './pages/PersonnelSelection';
+import Endorsement from './pages/Endorsement';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { role, isLoading } = useAuth();
@@ -64,10 +65,18 @@ function App() {
               }
             />
             <Route
-              path="/personnel-selection"
+              path="/shortlist"
               element={
                 <ProtectedRoute>
                   <PersonnelSelection />
+                </ProtectedRoute>
+              }
+            />
+             <Route
+              path="/endorsement"
+              element={
+                <ProtectedRoute>
+                  <Endorsement />
                 </ProtectedRoute>
               }
             />

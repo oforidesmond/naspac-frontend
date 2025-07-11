@@ -334,7 +334,7 @@ const PersonnelSelection: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen px-2 py-4">
       <div className="w-full max-w-full mx-auto">
-        <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">Shortlist Personnel</h2>
+        <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">Endorse Personnel</h2>
         <div className="flex flex-col sm:flex-row justify-between mb-3 gap-2">
           <Space>
             {selectedRows.length > 0 && (
@@ -345,7 +345,7 @@ const PersonnelSelection: React.FC = () => {
                   onClick={() => setShortlistModalVisible(true)}
                   className="!bg-[#5B3418] hover:!bg-[#4a2c1c] !border-0"
                 >
-                  Shortlist
+                  Endorse
                 </Button>
               </Space>
             )}
@@ -439,7 +439,7 @@ const PersonnelSelection: React.FC = () => {
           okButtonProps={{ className: '!bg-[#5B3418] !border-0' }}
           cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
         >
-          <p>Are you sure you want to shortlist {selectedRows.length} personnel?</p>
+          <p>Are you sure you want to endorse {selectedRows.length} personnel?</p>
         </Modal>
       </div>
     </div>

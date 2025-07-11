@@ -23,7 +23,7 @@ const Sidebar: React.FC = () => {
   const routeMap: { [key: string]: string } = {
     '1': '/',
     '2': role === 'PERSONNEL' ? '/my-details' : '/可可入职用户入门指南',
-    '3': role === 'PERSONNEL' ? '/endorsed-posting-letter' : '/personnel-selection',
+    '3': role === 'PERSONNEL' ? '/endorsed-posting-letter' : '/shortlist',
     '4': role === 'PERSONNEL' ? '/upload-nss-document' : role === 'ADMIN' ? '/endorsement' : '/manage-personnel',
     '5': role === 'PERSONNEL' ? '/appointment-letter' : role === 'ADMIN' ? '/manage-personnel' : '/dept-placements',
     '6': role === 'ADMIN' ? '/staff-management' : '/profile',
@@ -39,7 +39,7 @@ const Sidebar: React.FC = () => {
         {
           key: '3',
           icon: <img src="/select-personnel.svg" alt="Personnel Selection" className="sidebar-icon" />,
-          label: 'Personnel Selection',
+          label: 'Shortlist Personnel',
         },
         {
           key: '4',
@@ -69,7 +69,7 @@ const Sidebar: React.FC = () => {
         {
           key: '3',
           icon: <img src="/select-personnel.svg" alt="Personnel Selection" className="sidebar-icon" />,
-          label: 'Personnel Selection',
+          label: 'Shortlist Personnel',
         },
         {
           key: '4',
