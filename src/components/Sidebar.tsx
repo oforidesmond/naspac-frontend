@@ -20,16 +20,20 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
 
   // Define route mappings for menu items
-  const routeMap: { [key: string]: string } = {
+  const mainRouteMap: { [key: string]: string } = {
     '1': '/',
     '2': role === 'PERSONNEL' ? '/my-details' : '/可可入职用户入门指南',
     '3': role === 'PERSONNEL' ? '/endorsed-posting-letter' : '/shortlist',
     '4': role === 'PERSONNEL' ? '/upload-nss-document' : role === 'ADMIN' ? '/endorsement' : '/manage-personnel',
     '5': role === 'PERSONNEL' ? '/appointment-letter' : role === 'ADMIN' ? '/manage-personnel' : '/dept-placements',
-    '6': role === 'ADMIN' ? '/staff-management' : '/profile',
-    '7': role === 'ADMIN' ? '/dept-placements' : '/notices',
+   '8': '/staff-management',
+    '9': '/dept-placements', 
   };
 
+  const settingsRouteMap: { [key: string]: string } = {
+  '6': '/profile',
+  '7': '/notices',
+};
   // Role-based menu items
   const getMenuItems = () => {
     if (role === 'ADMIN') {
@@ -51,13 +55,13 @@ const Sidebar: React.FC = () => {
           icon: <img src="/manage.svg" alt="Manage Personnel" className="sidebar-icon" />,
           label: 'Manage Personnel',
         },
-        {
-          key: '6',
+          {
+          key: '8', // Changed from '6' to avoid conflict
           icon: <img src="/admin.svg" alt="Staff Management" className="sidebar-icon" />,
           label: 'Staff Management',
         },
         {
-          key: '7',
+          key: '9', // Changed from '7' to avoid conflict
           icon: <img src="/bank.svg" alt="Dept. Placements" className="sidebar-icon" />,
           label: 'Dept. Placements',
         },
@@ -116,7 +120,7 @@ const Sidebar: React.FC = () => {
   };
 
   const handleMenuClick = ({ key }: { key: string }) => {
-    const path = routeMap[key];
+    const path = mainRouteMap[key] || settingsRouteMap[key];
     if (path) {
       navigate(path);
     }
