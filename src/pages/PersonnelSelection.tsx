@@ -42,6 +42,37 @@ const PersonnelSelection: React.FC = () => {
   const [modalContent, setModalContent] = useState<{ url: string; type: string } | null>(null);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [shortlistModalVisible, setShortlistModalVisible] = useState(false);
+  const [shortlistedCount, setShortlistedCount] = useState<number>(0);
+
+
+  // Fetch shortlisted count
+  useEffect(() => {
+  const fetchShortlistedCount = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/users/submission-status-counts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          statuses: ['PENDING_ENDORSEMENT'],
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setShortlistedCount(data.PENDING_ENDORSEMENT || 0);
+      } else {
+        toast.error(data.message || 'Failed to load shortlisted count');
+      }
+    } catch (error) {
+      toast.error('Failed to load shortlisted count');
+    }
+  };
+  if (role && ['ADMIN', 'STAFF'].includes(role)) {
+    fetchShortlistedCount();
+  }
+}, [role]);
 
   // Fetch submissions
   useEffect(() => {
@@ -177,8 +208,9 @@ const PersonnelSelection: React.FC = () => {
       await Promise.all(updatePromises);
 
       // Update local state to remove shortlisted submissions
-      setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+       setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
       setFilteredSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+      setShortlistedCount((prev) => prev + selectedRows.length);
       setSelectedRows([]);
       setShortlistModalVisible(false);
       toast.success(`${selectedRows.length} personnel shortlisted`);
@@ -337,6 +369,9 @@ const PersonnelSelection: React.FC = () => {
         <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">Shortlist Personnel</h2>
         <div className="flex flex-col sm:flex-row justify-between mb-3 gap-2">
           <Space>
+             <Text className="text-base font-semibold text-[#5B3418] bg-amber-100 px-3 py-1 rounded-md">
+              Total Shortlisted: {shortlistedCount}
+            </Text>
             {selectedRows.length > 0 && (
               <Space>
                 <Text>{`${selectedRows.length} selected`}</Text>

@@ -30,18 +30,47 @@ interface Submission {
   programStudied: string;
 }
 
-const PersonnelSelection: React.FC = () => {
+const Endorsement: React.FC = () => {
   const { role } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>([]);
-  const [programFilter, setProgramFilter] = useState<string>('All courses');
+  const [statusFilter, setStatusFilter] = useState<string>('PENDING_ENDORSEMENT');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [programs, setPrograms] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalContent, setModalContent] = useState<{ url: string; type: string } | null>(null);
+  const [modalContent, setModalContent] = useState<{ url: string; type: string; id?: number } | null>(null);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [shortlistModalVisible, setShortlistModalVisible] = useState(false);
+  const [endorsedCount, setEndorsedCount] = useState<number>(0);
+
+   // Fetch endorsed count
+  useEffect(() => {
+    const fetchEndorsedCount = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/users/submission-status-counts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            statuses: ['ENDORSED'],
+          }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setEndorsedCount(data.ENDORSED || 0);
+        } else {
+          toast.error(data.message || 'Failed to load endorsed count');
+        }
+      } catch (error) {
+        toast.error('Failed to load endorsed count');
+      }
+    };
+   if (role && ['ADMIN', 'STAFF'].includes(role)) {
+    fetchEndorsedCount();
+    }
+  }, [role]);
 
   // Fetch submissions
   useEffect(() => {
@@ -56,12 +85,12 @@ const PersonnelSelection: React.FC = () => {
         });
         const data: Submission[] = await response.json();
         if (response.ok) {
-          // Filter for PENDING status only
-          const pendingSubmissions = data.filter((s) => s.status === 'PENDING');
-          setSubmissions(pendingSubmissions);
-          setFilteredSubmissions(pendingSubmissions);
-          const uniquePrograms = Array.from(new Set(data.map((s: Submission) => s.programStudied)));
-          setPrograms(['All courses', ...uniquePrograms]);
+          // Filter for PENDING_ENDORSEMENT status only
+         const filteredSubmissions = data.filter((s) => ['PENDING_ENDORSEMENT', 'ENDORSED'].includes(s.status));
+          setSubmissions(filteredSubmissions);
+          setFilteredSubmissions(statusFilter === 'All' 
+            ? filteredSubmissions 
+            : filteredSubmissions.filter((s) => s.status === statusFilter));
         } else {
           toast.error((data as any).message || 'Failed to load submissions');
         }
@@ -77,8 +106,8 @@ const PersonnelSelection: React.FC = () => {
   // Filter and search logic
   useEffect(() => {
     let filtered = submissions;
-    if (programFilter !== 'All courses') {
-      filtered = filtered.filter((s) => s.programStudied === programFilter);
+    if (statusFilter !== 'All') {
+      filtered = filtered.filter((s) => s.status === statusFilter);
     }
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
@@ -91,9 +120,8 @@ const PersonnelSelection: React.FC = () => {
       );
     }
     setFilteredSubmissions(filtered);
-    // Reset selections when filters change
     setSelectedRows([]);
-  }, [programFilter, searchTerm, submissions]);
+  }, [statusFilter, searchTerm, submissions]);
 
   // Selection handlers
   const handleSelectAll = () => {
@@ -110,7 +138,7 @@ const PersonnelSelection: React.FC = () => {
     );
   };
 
-  // Export to Excel (includes all fields)
+  // Export to Excel
   const exportToExcel = () => {
     const exportData = (selectedRows.length > 0
       ? filteredSubmissions.filter((s) => selectedRows.includes(s.id))
@@ -143,8 +171,9 @@ const PersonnelSelection: React.FC = () => {
   };
 
   // Handle letter view
-  const showLetter = (url: string, type: string) => {
-    setModalContent({ url, type });
+  const showLetter = (url: string, type: string, id?: number) => {
+     console.log('Showing letter:', { url, type, id });
+    setModalContent({ url, type, id });
     setModalVisible(true);
   };
 
@@ -155,42 +184,81 @@ const PersonnelSelection: React.FC = () => {
     }
   };
 
-  // Handle shortlist confirmation
+  // Handle endorse action
+ const handleEndorse = async () => {
+  if (!modalContent?.id) return;
+   console.log('Endorsing submission:', modalContent.id);
+  setLoading(true);
+  try {
+    const response = await fetch('http://localhost:3000/documents/sign', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({
+        submissionId: modalContent.id,
+        documentType: 'appointmentLetter',
+      }),
+    });
+    if (response.ok) {
+      // Update local state
+      setSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
+        setFilteredSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
+        setModalVisible(false);
+        setEndorsedCount((prev) => prev + 1);
+        toast.success('Appointment letter endorsed successfully');
+    } else {
+      const errorData = await response.json();
+      toast.error(errorData.message || 'Failed to endorse appointment letter');
+    }
+  } catch (error: any) {
+    toast.error(error.message || 'Failed to endorse appointment letter');
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Handle bulk endorse
   const handleShortlistConfirm = async () => {
-    setLoading(true);
-    try {
-      const updatePromises = selectedRows.map(async (id) => {
-        const response = await fetch(`http://localhost:3000/users/update-submission-status/${id}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({ status: 'PENDING_ENDORSEMENT' }),
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to update status');
-        }
+  setLoading(true);
+  try {
+    const updatePromises = selectedRows.map(async (id) => {
+      const response = await fetch('http://localhost:3000/documents/sign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          submissionId: id,
+          documentType: 'appointmentLetter',
+        }),
       });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to endorse appointment letter');
+      }
+    });
 
-      await Promise.all(updatePromises);
+    await Promise.all(updatePromises);
 
-      // Update local state to remove shortlisted submissions
-      setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+    // Update local state
+    setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
       setFilteredSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+      setEndorsedCount((prev) => prev + selectedRows.length);
       setSelectedRows([]);
       setShortlistModalVisible(false);
-      toast.success(`${selectedRows.length} personnel shortlisted`);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to shortlist personnel');
-    } finally {
-      setLoading(false);
-    }
-  };
+      toast.success(`${selectedRows.length} appointment letters endorsed`);
+  } catch (error: any) {
+    toast.error(error.message || 'Failed to endorse appointment letters');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  // Restrict to ADMIN or STAFF
-  if (role !== 'ADMIN' && role !== 'STAFF') {
+  // Restrict to ADMIN
+  if (!role || role !== 'ADMIN') {
     return (
       <div className="flex items-center justify-center h-full">
         <Text className="text-lg text-[#3C3939]">Access restricted.</Text>
@@ -210,14 +278,16 @@ const PersonnelSelection: React.FC = () => {
           checked={selectedRows.length === filteredSubmissions.length && filteredSubmissions.length > 0}
           indeterminate={selectedRows.length > 0 && selectedRows.length < filteredSubmissions.length}
           onChange={handleSelectAll}
+          disabled={statusFilter === 'ENDORSED'}
         />
       ),
       key: 'selection',
       width: 10,
       render: (_: any, record: Submission) => (
-        <Checkbox
+         <Checkbox
           checked={selectedRows.includes(record.id)}
           onChange={() => handleRowSelect(record.id)}
+          disabled={statusFilter === 'ENDORSED'}
         />
       ),
     },
@@ -233,17 +303,6 @@ const PersonnelSelection: React.FC = () => {
       key: 'nssNumber',
       width: 100,
     },
-    // {
-    //   title: 'Email',
-    //   dataIndex: 'email',
-    //   key: 'email',
-    //   width: 100,
-    //   render: (text: string) => (
-    //     <Tooltip title={text}>
-    //       <span>{truncateText(text)}</span>
-    //     </Tooltip>
-    //   ),
-    // },
     {
       title: 'Gender',
       dataIndex: 'gender',
@@ -256,17 +315,6 @@ const PersonnelSelection: React.FC = () => {
       key: 'phoneNumber',
       width: 110,
     },
-    // {
-    //   title: 'Region',
-    //   dataIndex: 'regionOfSchool',
-    //   key: 'regionOfSchool',
-    //   width: 100,
-    //   render: (text: string) => (
-    //     <Tooltip title={text}>
-    //       <span>{truncateText(text)}</span>
-    //     </Tooltip>
-    //   ),
-    // },
     {
       title: 'Division',
       dataIndex: 'divisionPostedTo',
@@ -300,7 +348,7 @@ const PersonnelSelection: React.FC = () => {
               type="link"
               onClick={(e) => {
                 e.stopPropagation();
-                showLetter(record.postingLetterUrl, 'Posting Letter');
+                showLetter(record.postingLetterUrl, 'Posting Letter', record.id);
               }}
               icon={<EyeOutlined style={{ fontSize: '16px', color: '#5B3418' }} />}
             />
@@ -320,7 +368,7 @@ const PersonnelSelection: React.FC = () => {
               type="link"
               onClick={(e) => {
                 e.stopPropagation();
-                showLetter(record.appointmentLetterUrl, 'Appointment Letter');
+                showLetter(record.appointmentLetterUrl, 'Appointment Letter', record.id);
               }}
               icon={<EyeOutlined style={{ fontSize: '16px', color: '#5B3418' }} />}
             />
@@ -337,7 +385,10 @@ const PersonnelSelection: React.FC = () => {
         <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">Endorse Personnel</h2>
         <div className="flex flex-col sm:flex-row justify-between mb-3 gap-2">
           <Space>
-            {selectedRows.length > 0 && (
+            <Text className="text-base font-semibold text-[#5B3418] bg-amber-100 px-3 py-1 rounded-md">
+              Total Endorsed: {endorsedCount}
+            </Text>
+            {selectedRows.length > 0 && statusFilter !== 'ENDORSED' && (
               <Space>
                 <Text>{`${selectedRows.length} selected`}</Text>
                 <Button
@@ -350,16 +401,14 @@ const PersonnelSelection: React.FC = () => {
               </Space>
             )}
             <Select
-              value={programFilter}
-              onChange={setProgramFilter}
+              value={statusFilter}
+              onChange={setStatusFilter}
               className="rounded-md w-fit sm:w-48"
-              placeholder="Filter by program"
+              placeholder="Filter by status"
             >
-              {programs.map((program) => (
-                <Option key={program} value={program}>
-                  {program}
-                </Option>
-              ))}
+              <Option value="PENDING_ENDORSEMENT">Pending Endorsement</Option>
+              <Option value="ENDORSED">Endorsed</Option>
+              {/* <Option value="All">All</Option> */}
             </Select>
           </Space>
           <Space className="w-full sm:w-auto">
@@ -391,7 +440,7 @@ const PersonnelSelection: React.FC = () => {
           pagination={{ pageSize: 10 }}
           onRow={(record) => ({
             onClick: (event) => {
-              if (!(event.target as HTMLElement).closest('.ant-btn, .ant-checkbox')) {
+              if (!(event.target as HTMLElement).closest('.ant-btn, .ant-checkbox') && statusFilter !== 'ENDORSED') {
                 handleRowSelect(record.id);
               }
             },
@@ -410,6 +459,17 @@ const PersonnelSelection: React.FC = () => {
             >
               Download
             </Button>,
+            modalContent?.type === 'Appointment Letter' && statusFilter !== 'ENDORSED' && (
+              <Button
+                key="endorse"
+                className="!bg-[#28a745] !border-0"
+                type="primary"
+                onClick={handleEndorse}
+                loading={loading}
+              >
+                Endorse
+              </Button>
+            ),
             <Button
               key="close"
               className="!bg-[#c95757] !border-0"
@@ -417,7 +477,7 @@ const PersonnelSelection: React.FC = () => {
             >
               Close
             </Button>,
-          ]}
+          ].filter(Boolean)}
           width={800}
           className="centered-modal"
         >
@@ -430,7 +490,7 @@ const PersonnelSelection: React.FC = () => {
           )}
         </Modal>
         <Modal
-          title="Confirm Shortlist"
+          title="Confirm Endorsement"
           open={shortlistModalVisible}
           onOk={handleShortlistConfirm}
           onCancel={() => setShortlistModalVisible(false)}
@@ -446,4 +506,4 @@ const PersonnelSelection: React.FC = () => {
   );
 };
 
-export default PersonnelSelection;
+export default Endorsement;
