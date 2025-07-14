@@ -47,7 +47,7 @@ const StaffLogin: React.FC = () => {
 
   const data = await response.json();
 
-  if (data.accessToken && (data.role === 'ADMIN' || data.role === 'STAFF')) {
+  if (data.accessToken && (data.role === 'ADMIN' || data.role === 'STAFF' || data.role === 'SUPERVISOR')) {
     localStorage.setItem('token', data.accessToken);
     setRole(data.role);
     toast.success('Login successful!', {

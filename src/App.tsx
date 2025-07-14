@@ -13,6 +13,8 @@ import OnboardingForm from './pages/OnboardingForm';
 import PersonnelSelection from './pages/PersonnelSelection';
 import Endorsement from './pages/Endorsement';
 import Profile from './pages/Profile';
+import StaffManagement from './pages/StaffManagement';
+import DepartmentPlacements from './pages/DeptPlacements';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { role, isLoading } = useAuth();
@@ -78,6 +80,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Endorsement />
+                </ProtectedRoute>
+              }
+            />
+                <Route
+              path="/staff-management"
+              element={
+                <ProtectedRoute>
+                  <StaffManagement />
+                </ProtectedRoute>
+              }
+            />
+                <Route
+              path="/dept-placements"
+              element={
+                <ProtectedRoute>
+                  <DepartmentPlacements />
                 </ProtectedRoute>
               }
             />

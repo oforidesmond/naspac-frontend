@@ -236,6 +236,7 @@ const OnboardingForm: React.FC = () => {
             <Select className="rounded-md">
               <Option value="MALE">Male</Option>
               <Option value="FEMALE">Female</Option>
+              <Option value="OTHER">Other</Option>
             </Select>
           </Form.Item>
           <Form.Item

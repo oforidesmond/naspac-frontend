@@ -4,8 +4,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
 interface AuthContextType {
-  role: 'ADMIN' | 'STAFF' | 'PERSONNEL' | null;
-  setRole: (role: 'ADMIN' | 'STAFF' | 'PERSONNEL' | null) => void;
+  role: 'ADMIN' | 'STAFF' | 'SUPERVISOR' | 'PERSONNEL' | null;
+  setRole: (role: 'ADMIN' | 'STAFF' | 'SUPERVISOR' | 'PERSONNEL' | null) => void;
   logout: () => void;
   isLoading: boolean;
 }
@@ -18,7 +18,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [role, setRole] = useState<'ADMIN' | 'STAFF' | 'PERSONNEL' | null>(null);
+  const [role, setRole] = useState<'ADMIN' | 'STAFF' | 'SUPERVISOR' | 'PERSONNEL' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   // const navigate = useNavigate();
 
