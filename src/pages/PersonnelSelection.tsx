@@ -43,6 +43,8 @@ const PersonnelSelection: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [shortlistModalVisible, setShortlistModalVisible] = useState(false);
   const [shortlistedCount, setShortlistedCount] = useState<number>(0);
+  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
+const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
 
 
   // Fetch shortlisted count
@@ -186,8 +188,34 @@ const PersonnelSelection: React.FC = () => {
     }
   };
 
+ // fetch departments
+useEffect(() => {
+  const fetchDepartments = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/users/departments', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setDepartments(data);
+      } else {
+        toast.error(data.message || 'Failed to load departments');
+      }
+    } catch (error) {
+      toast.error('Failed to load departments');
+    }
+  };
+  fetchDepartments();
+}, []);
+
   // Handle shortlist confirmation
   const handleShortlistConfirm = async () => {
+    if (!selectedDepartment) {
+    toast.error('Please select a department');
+    return;
+    }
     setLoading(true);
     try {
       const updatePromises = selectedRows.map(async (id) => {
@@ -203,19 +231,39 @@ const PersonnelSelection: React.FC = () => {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Failed to update status');
         }
+          return id;
       });
 
-      await Promise.all(updatePromises);
+     const updatedSubmissionIds = await Promise.all(updatePromises);
+
+    // Then, assign personnel to department
+    const assignResponse = await fetch('http://localhost:3000/users/assign-personnel-to-department', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({
+        departmentId: selectedDepartment,
+        submissionIds: updatedSubmissionIds,
+      }),
+    });
+
+    if (!assignResponse.ok) {
+      const errorData = await assignResponse.json();
+      throw new Error(errorData.message || 'Failed to assign personnel to department');
+    }
 
       // Update local state to remove shortlisted submissions
-       setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
-      setFilteredSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
-      setShortlistedCount((prev) => prev + selectedRows.length);
-      setSelectedRows([]);
-      setShortlistModalVisible(false);
-      toast.success(`${selectedRows.length} personnel shortlisted`);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to shortlist personnel');
+      setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+    setFilteredSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+    setShortlistedCount((prev) => prev + selectedRows.length);
+    setSelectedRows([]);
+    setShortlistModalVisible(false);
+    setSelectedDepartment(null);
+    toast.success(`${selectedRows.length} personnel shortlisted and assigned to department`);
+  } catch (error: any) {
+      toast.error(error.message || 'Failed to shortlist personnel or assign to department');
     } finally {
       setLoading(false);
     }
@@ -464,18 +512,46 @@ const PersonnelSelection: React.FC = () => {
             />
           )}
         </Modal>
-        <Modal
-          title="Confirm Shortlist"
-          open={shortlistModalVisible}
-          onOk={handleShortlistConfirm}
-          onCancel={() => setShortlistModalVisible(false)}
-          okText="Confirm"
-          cancelText="Cancel"
-          okButtonProps={{ className: '!bg-[#5B3418] !border-0' }}
-          cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
+       <Modal
+  title="Confirm Shortlist"
+  open={shortlistModalVisible}
+  onOk={handleShortlistConfirm}
+  onCancel={() => {
+    setShortlistModalVisible(false);
+    setSelectedDepartment(null);
+  }}
+  okText="Confirm"
+  cancelText="Cancel"
+  okButtonProps={{ 
+    className: '!bg-[#5B3418] !text-white !border-0', 
+    disabled: !selectedDepartment 
+  }}
+  cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
+>
+  <div className="flex flex-col gap-4">
+    <p>Are you sure you want to shortlist {selectedRows.length} personnel?</p>
+    <div className="flex justify-between items-center">
+      <div className="w-1/3">
+        <Select
+          showSearch
+          placeholder="Select a department"
+          value={selectedDepartment}
+          onChange={(value) => setSelectedDepartment(value)}
+          filterOption={(input, option) =>
+            (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+          }
+          className="w-full"
         >
-          <p>Are you sure you want to shortlist {selectedRows.length} personnel?</p>
-        </Modal>
+          {departments.map((dept) => (
+            <Option key={dept.id} value={dept.id}>
+              {dept.name}
+            </Option>
+          ))}
+        </Select>
+      </div>
+    </div>
+  </div>
+</Modal>
       </div>
     </div>
   );

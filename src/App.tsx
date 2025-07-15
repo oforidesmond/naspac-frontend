@@ -15,6 +15,7 @@ import Endorsement from './pages/Endorsement';
 import Profile from './pages/Profile';
 import StaffManagement from './pages/StaffManagement';
 import DepartmentPlacements from './pages/DeptPlacements';
+import ManagePersonnel from './pages/ManagePersonnel';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { role, isLoading } = useAuth();
@@ -96,6 +97,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DepartmentPlacements />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manage-personnel"
+              element={
+                <ProtectedRoute>
+                  <ManagePersonnel />
                 </ProtectedRoute>
               }
             />

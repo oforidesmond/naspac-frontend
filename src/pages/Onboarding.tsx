@@ -44,7 +44,7 @@ const Onboarding: React.FC = () => {
       if (
         e.ctrlKey || // Ctrl+anything (e.g., Ctrl+T, Ctrl+R)
         e.altKey || // Alt+anything (e.g., Alt+Left for back)
-        ["F12", "Escape", "Backspace"].includes(e.key) || // Dev tools, Escape, Backspace
+        ["F12", "Escape"].includes(e.key) || // Dev tools, Escape
         (e.metaKey && ["t", "n", "r"].includes(e.key.toLowerCase())) // Cmd+T, Cmd+N, Cmd+R (Mac)
       ) {
         e.preventDefault();

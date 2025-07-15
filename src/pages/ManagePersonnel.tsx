@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Select, Button, Typography, Modal, Form, Input, Space } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+// import { PlusOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import { useAuth } from '../AuthContext';
 import '../components/PersonnelSelection.css';
@@ -13,18 +13,13 @@ interface Department {
   name: string;
   supervisorId: number;
   supervisorName: string;
-  supervisor: { // Add supervisor details for the department
-    id: number;
-    name: string;
-    email: string;
-  } | null;
 }
 
 interface Personnel {
   id: number;
   name: string;
   nssNumber: string;
-  department: Department | null;
+  department: { id: number; name: string } | null;
   submissions: {
     id: number;
     fullName: string;
@@ -33,6 +28,7 @@ interface Personnel {
     divisionPostedTo: string;
     status: string;
   }[];
+  supervisor: { id: number; name: string } | null;
 }
 
 interface Supervisor {
@@ -41,7 +37,7 @@ interface Supervisor {
   role: 'ADMIN' | 'STAFF' | 'SUPERVISOR';
 }
 
-const DepartmentPlacements: React.FC = () => {
+const ManagePersonnel: React.FC = () => {
   const { role } = useAuth();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [filteredPersonnel, setFilteredPersonnel] = useState<Personnel[]>([]);
@@ -70,22 +66,22 @@ const DepartmentPlacements: React.FC = () => {
         }
 
         // Fetch personnel
-        const personnelResponse = await fetch('http://localhost:3000/users/personnel', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({ statuses: ['PENDING_ENDORSEMENT', 'ENDORSED', 'VALIDATED', 'COMPLETED'] }),
-        });
-        const personnelData: Personnel[] = await personnelResponse.json();
-        if (!personnelResponse.ok) {
-          throw new Error((personnelData as any).message || 'Failed to load personnel');
-        }
+       const personnelResponse = await fetch('http://localhost:3000/users/personnel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ statuses: ['VALIDATED', 'COMPLETED'] }),
+      });
+      const personnelData: Personnel[] = await personnelResponse.json();
+      if (!personnelResponse.ok) {
+        throw new Error((personnelData as any).message || 'Failed to load personnel');
+      }
 
-        setDepartments(deptData);
-        setPersonnel(personnelData);
-        setFilteredPersonnel(personnelData);
+         setDepartments(deptData);
+      setPersonnel(personnelData);
+      setFilteredPersonnel(personnelData);
       } catch (error: any) {
         toast.error(error.message || 'Failed to load data');
       } finally {
@@ -121,10 +117,10 @@ const DepartmentPlacements: React.FC = () => {
 
   // Filter logic
   useEffect(() => {
-    let filtered = personnel;
-    if (departmentFilter !== 'All') {
-      filtered = personnel.filter((p) => p.department?.name === departmentFilter);
-    }
+  let filtered = personnel;
+  if (departmentFilter !== 'All') {
+    filtered = personnel.filter((p) => p.department?.name === departmentFilter);
+  }
     setFilteredPersonnel(filtered);
   }, [departmentFilter, personnel]);
 
@@ -140,19 +136,12 @@ const DepartmentPlacements: React.FC = () => {
         },
         body: JSON.stringify({
           name: values.name,
-          supervisorId: Number(values.supervisorId),
+          supervisorId: Number(values.supervisorId), // Ensure supervisorId is a number
         }),
       });
       const data = await response.json();
       if (response.ok) {
-        setDepartments((prev) => [...prev, { 
-          ...data, 
-          supervisorName: supervisors.find((s) => s.id === data.supervisorId)?.name || 'Unknown',
-          supervisor: { 
-            id: data.supervisorId, 
-            name: supervisors.find((s) => s.id === data.supervisorId)?.name || 'Unknown',
-          } 
-        }]);
+        setDepartments((prev) => [...prev, { ...data, supervisorName: supervisors.find((s) => s.id === data.supervisorId)?.name || 'Unknown' }]);
         setCreateModalVisible(false);
         form.resetFields();
         toast.success('Department created successfully');
@@ -190,51 +179,51 @@ const DepartmentPlacements: React.FC = () => {
       width: 150,
     },
     {
-      title: 'Department',
-      dataIndex: ['department', 'name'],
-      key: 'department',
-      width: 200,
-      render: (name: string | undefined) => name || 'Unassigned',
+    title: 'Department',
+    dataIndex: ['department', 'name'],
+    key: 'department',
+    width: 200,
+    render: (name: string | undefined) => name || 'Unassigned',
     },
     {
-      title: 'Program Studied',
-      key: 'programStudied',
-      width: 180,
-      render: (record: Personnel) => record.submissions[0]?.programStudied || 'N/A',
+    title: 'Program Studied',
+    key: 'programStudied',
+    width: 180,
+    render: (record: Personnel) => record.submissions[0]?.programStudied || 'N/A',
+  },
+  {
+    title: 'Supervisor',
+    dataIndex: ['supervisor', 'name'],
+    key: 'supervisor',
+    width: 200,
+    render: (name: string | undefined) => name || 'Unassigned',
     },
-    {
-      title: 'Supervisor',
-      dataIndex: ['department', 'supervisor', 'name'], // Updated to use department's supervisor
-      key: 'supervisor',
-      width: 200,
-      render: (name: string | undefined) => name || 'Unassigned',
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      width: 150,
-      render: (record: Personnel) => (
-        <span className={`status-${record.submissions[0]?.status.toLowerCase()}`}>
-          {record.submissions[0]?.status.charAt(0).toUpperCase() + record.submissions[0]?.status.slice(1).toLowerCase()}
-        </span>
-      ),
-    },
+      {
+    title: 'Status',
+    key: 'status',
+    width: 150,
+    render: (record: Personnel) => (
+      <span className={`status-${record.submissions[0]?.status.toLowerCase()}`}>
+        {record.submissions[0]?.status.charAt(0).toUpperCase() + record.submissions[0]?.status.slice(1).toLowerCase()}
+      </span>
+    ),
+  },
   ];
 
   return (
     <div className="flex flex-col min-h-screen px-2 py-4">
       <div className="w-full max-w-full mx-auto">
-        <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">Department Placements</h2>
+        <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">Manage Personnel</h2>
         <div className="flex flex-col sm:flex-row justify-between mb-3 gap-2">
           <Space>
-            <Button
+            {/* <Button
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => setCreateModalVisible(true)}
               className="!bg-[#5B3418] hover:!bg-[#4a2c1c] !border-0"
             >
               Create Department
-            </Button>
+            </Button> */}
             <Select
               value={departmentFilter}
               onChange={setDepartmentFilter}
@@ -324,4 +313,4 @@ const DepartmentPlacements: React.FC = () => {
   );
 };
 
-export default DepartmentPlacements;
+export default ManagePersonnel;

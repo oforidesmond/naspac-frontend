@@ -8,14 +8,18 @@ import '../components/PersonnelSelection.css';
 const { Option } = Select;
 const { Text } = Typography;
 
+interface Department {
+  id: number;
+  name: string;
+}
+
 interface Staff {
   id: number;
   staffId: string;
   name: string;
   email: string;
   role: 'ADMIN' | 'STAFF' | 'SUPERVISOR';
-  department: string;
-  unit: string;
+  departmentsSupervised: Department[];
 }
 
 const StaffManagement: React.FC = () => {
@@ -79,8 +83,8 @@ const StaffManagement: React.FC = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setStaffList((prev) => [...prev, data]);
-        setFilteredStaffList((prev) => [...prev, data]);
+       setStaffList((prev) => [...prev, { ...data, departmentsSupervised: [] }]);
+        setFilteredStaffList((prev) => [...prev, { ...data, departmentsSupervised: [] }]);
         setCreateModalVisible(false);
         form.resetFields();
         toast.success('User created successfully');
@@ -105,12 +109,6 @@ const StaffManagement: React.FC = () => {
 
   // Table columns
   const columns = [
-    {
-      title: 'Id',
-      dataIndex: 'id',
-      key: 'id',
-      width: 60,
-    },
     {
       title: 'Name',
       dataIndex: 'name',
@@ -140,17 +138,15 @@ const StaffManagement: React.FC = () => {
         </span>
       ),
     },
-    {
+        {
       title: 'Department',
-      dataIndex: 'department',
+      dataIndex: 'departmentsSupervised',
       key: 'department',
       width: 160,
-    },
-    {
-      title: 'Unit',
-      dataIndex: 'unit',
-      key: 'unit',
-      width: 100,
+      render: (departments: Department[]) =>
+        departments.length > 0
+          ? departments.map((dept) => dept.name).join(', ')
+          : '',
     },
   ];
 
