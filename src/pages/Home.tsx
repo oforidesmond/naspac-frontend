@@ -1,94 +1,241 @@
-import React from 'react';
-import { Card, Avatar, Typography } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Card, Avatar, Typography, message, Select } from 'antd';
 import { BellFilled, UserOutlined, SettingOutlined } from '@ant-design/icons';
 import { useAuth } from '../AuthContext';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const { Text } = Typography;
+const { Option } = Select;
+
+interface Department {
+  departmentId: number;
+  departmentName: string;
+  personnelCount: number;
+}
+
+interface ReportCounts {
+  totalPersonnel: number;
+  totalNonPersonnel: number;
+  totalDepartments: number;
+  statusCounts: {
+    pending: number;
+    pendingEndorsement: number;
+    endorsed: number;
+    validated: number;
+    completed: number;
+    rejected: number;
+  };
+  acceptedCount: number;
+  personnelByDepartment: Department[];
+  onboardedStudentCount: number;
+}
 
 const Home: React.FC = () => {
   const { role } = useAuth();
+   const navigate = useNavigate();
+  const [reportData, setReportData] = useState<ReportCounts | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
+
+  // Fetch report counts from the endpoint
+  useEffect(() => {
+    const fetchReportCounts = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/users/reports-counts', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        setReportData(response.data);
+         if (response.data.personnelByDepartment?.length > 0) {
+          setSelectedDepartment(response.data.personnelByDepartment[0].departmentName);
+        }
+        setLoading(false);
+      } catch (error) {
+        message.error('Failed to fetch report counts');
+        setLoading(false);
+      }
+    };
+    fetchReportCounts();
+  }, []);
 
   // Role-based dashboard content
   const renderDashboardContent = () => {
     if (role === 'ADMIN' || role === 'STAFF') {
       const dashboardTitle = role === 'ADMIN' ? 'Admin Dashboard' : 'Assistant Admin Dashboard';
-      const cardTitles = role === 'ADMIN'
-        ? ['Personnel', 'Staff', 'Endorsement', 'Department']
-        : ['Onboard', 'Personnel', 'Manage', 'Department'];
-      const cardIcons = [
-        '/admin-hero-1.svg',
-        '/admin-hero-2.svg',
-        '/admin-hero-3.svg',
-        '/admin-hero-4.svg',
-      ];
-
-        const cardGradients = [
-    'bg-gradient-to-r from-[#8B5523] to-[#5B3418]',
-    'bg-gradient-to-r from-[#C3C3C3] to-[#5E5E5E]',
-    'bg-gradient-to-r from-[#CC6F22] to-[#940000]',
-    'bg-gradient-to-r from-[#684A31] to-[#261700]',
-  ];
+      
+       // Define card data based on role
+    const cardData = role === 'ADMIN'
+      ? [
+          {
+            title: 'Personnel',
+            value: reportData?.totalPersonnel || 0,
+            icon: '/admin-hero-1.svg',
+            gradient: 'bg-gradient-to-r from-[#8B5523] to-[#5B3418]',
+            route: '/manage-personnel',
+          },
+          {
+            title: 'Staff',
+            value: reportData?.totalNonPersonnel || 0,
+            icon: '/admin-hero-2.svg',
+            gradient: 'bg-gradient-to-r from-[#C3C3C3] to-[#5E5E5E]',
+            route: '/staff-management',
+          },
+          {
+            title: 'Endorsed',
+            value: reportData?.statusCounts.pendingEndorsement || 0,
+            icon: '/admin-hero-3.svg',
+            gradient: 'bg-gradient-to-r from-[#CC6F22] to-[#940000]',
+            route: '/endorsement',
+          },
+          {
+            title: 'Departments',
+            value: reportData?.totalDepartments || 0,
+            icon: '/admin-hero-4.svg',
+            gradient: 'bg-gradient-to-r from-[#684A31] to-[#261700]',
+            route: '/dept-placements',
+          },
+        ]
+      : [
+          {
+            title: 'Onboarded',
+            value: reportData?.onboardedStudentCount || 0,
+            icon: '/admin-hero-1.svg',
+            gradient: 'bg-gradient-to-r from-[#8B5523] to-[#5B3418]',
+            route: '/onboarding',
+          },
+          {
+            title: 'Personnel',
+            value: reportData?.totalPersonnel || 0,
+            icon: '/admin-hero-2.svg',
+            gradient: 'bg-gradient-to-r from-[#C3C3C3] to-[#5E5E5E]',
+            route: '/shortlist',
+          },
+          {
+            title: 'Manage',
+            value: reportData?.acceptedCount || 0,
+            icon: '/admin-hero-3.svg',
+            gradient: 'bg-gradient-to-r from-[#CC6F22] to-[#940000]',
+            route: '/manage-personnel',
+          },
+          {
+            title: 'Departments',
+            value: reportData?.totalDepartments || 0,
+            icon: '/admin-hero-4.svg',
+            gradient: 'bg-gradient-to-r from-[#684A31] to-[#261700]',
+            route: '/dept-placements',
+          },
+        ];
 
       return (
         <>
-          {/* Section 1: Admin/Assistant Admin Dashboard Cards */}
-         <section className="mb-6 sm:mb-8">
-  <h2 className="text-md sm:text-xl lg:text-2xl font-bold text-[#3C3939] mb-4">
-    {dashboardTitle}
-  </h2>
-  <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
-    {cardTitles.map((title, index) => (
-      <div
-        key={index}
-        className={`w-[280px] h-[120px] sm:w-[230px] sm:h-[140px] p-4 sm:p-6 rounded-md shadow ${cardGradients[index]}`}
-      >
-        <div className="flex justify-between items-start h-full">
-          <div className="flex flex-col justify-between">
-            <img
-              src={cardIcons[index]}
-              alt={title}
-              className="w-9 h-9 sm:w-11 sm:h-11 object-contain mb-6"
-            />
-            <h4 className="text-base sm:text-md font-semibold text-white">
-              {title}
-            </h4>
+         {/* Section 1: Admin/Assistant Admin Dashboard Cards */}
+        <section className="mb-6 sm:mb-8">
+          <h2 className="text-md sm:text-xl lg:text-2xl font-bold text-[#3C3939] mb-4">
+            {dashboardTitle}
+          </h2>
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
+            {cardData.map((card, index) => (
+              <div
+                key={index}
+                className={`w-[280px] h-[120px] sm:w-[230px] sm:h-[140px] p-4 sm:p-6 rounded-md shadow ${card.gradient} transform transition-transform duration-200 hover:scale-105 cursor-pointer active:scale-95`}
+                onClick={() => navigate(card.route)}
+              >
+                <div className="flex justify-between items-start h-full">
+                  <div className="flex flex-col justify-between">
+                    <img
+                      src={card.icon}
+                      alt={card.title}
+                      className="w-9 h-9 sm:w-11 sm:h-11 object-contain mb-6"
+                    />
+                    <h4 className="text-base sm:text-md font-semibold text-white">
+                      {card.title}
+                    </h4>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm sm:text-base text-white">Total</p>
+                    <p className="text-2xl sm:text-4xl font-bold text-white">
+                      {loading ? '...' : card.value}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="text-right">
-            <p className="text-sm sm:text-base text-white">Total</p>
-            <p className="text-2xl sm:text-4xl font-bold text-white">0</p>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-</section>
+        </section>
 
-         {/* Section 2: Four Cards in 2x2 Grid */}
-      <section className="mb-6 sm:mb-8">
-        <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-[#3C3939] mb-4">
-          System Overview
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-xl">
-          {[
-            { title: 'Total Selections', value: 0 },
-            { title: 'Pending Selection', value: 0 },
-            { title: 'Total Endorsed', value: 0 },
-            { title: 'Pending Endorsement', value: 0 },
-          ].map((card, index) => (
-            <div
-              key={index}
-              className="w-[200px] h-[120px] bg-white p-4 sm:p-5 rounded-lg shadow"
-            >
-              <h4 className="text-base sm:text-lg font-semibold text-[#625E5C] mb-2">
-                {card.title}
-              </h4>
-              <p className="text-xl sm:text-2xl font-bold text-[#5B3418]">
-                {card.value}
-              </p>
+         {/* Section 2: System Overview with Large Card and 2x2 Grid */}
+        <section className="mb-6 sm:mb-8">
+          <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-[#3C3939] mb-4">
+            System Overview
+          </h3>
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+            {/* Large Card for Personnel by Department */}
+            <div className="w-full lg:w-[460px] h-[300px] bg-gradient-to-br from-[#6B4F3A] to-[#3F2D1F] p-6 rounded-lg shadow-lg flex flex-col justify-between transform transition-transform duration-200 hover:scale-[1.02]">
+              <div>
+                <h4 className="text-lg font-semibold text-white mb-4">
+                  Personnel by Department
+                </h4>
+                <div className="flex items-center gap-4">
+                  <Select
+                    value={selectedDepartment}
+                    onChange={setSelectedDepartment}
+                    className="w-1/3"
+                    placeholder="Select Department"
+                    loading={loading}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    {reportData?.personnelByDepartment?.map((dept) => (
+                      <Option key={dept.departmentId} value={dept.departmentName}>
+                        {dept.departmentName}
+                      </Option>
+                    ))}
+                  </Select>
+                  <p className="text-9xl font-bold text-white ml-36">
+                    {loading
+                      ? '...'
+                      : reportData?.personnelByDepartment.find(
+                          (dept) => dept.departmentName === selectedDepartment
+                        )?.personnelCount || 0}
+                  </p>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
+
+            {/* 2x2 Grid of Smaller Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full lg:w-[460px]">
+              {[
+                {
+                  title: 'Pending Selection',
+                  value: reportData?.statusCounts.pending || 0,
+                },
+                {
+                  title: 'Total Selections',
+                  value: reportData?.statusCounts.pendingEndorsement || 0,
+                },
+                {
+                  title: 'Total Endorsed',
+                  value: reportData?.acceptedCount || 0,
+                },
+                {
+                  title: 'Unapproved Submissions',
+                  value: reportData?.statusCounts.rejected || 0,
+                },
+              ].map((card, index) => (
+                <div
+                  key={index}
+                  className="w-full h-[140px] bg-white p-4 sm:p-5 rounded-lg shadow transform transition-transform duration-200 hover:scale-105 hover:shadow-xl"
+                >
+                  <h4 className="text-base sm:text-lg font-semibold text-[#625E5C] mb-2">
+                    {card.title}
+                  </h4>
+                  <p className="text-xl sm:text-2xl font-bold text-[#5B3418]">
+                    {loading ? '...' : card.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
       {/* Section 3: Recent Activity with Notifications */}
       <section>
