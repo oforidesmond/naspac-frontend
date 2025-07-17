@@ -170,3 +170,35 @@
     max-width: 100px;
   }
 }
+
+/* Modern modal styling */
+.modern-modal .ant-modal-content {
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.modern-modal .ant-modal-header {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.modern-modal .ant-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #3C3939;
+}
+
+.modern-modal .ant-modal-body {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.modern-modal .ant-modal-footer {
+  border-top: none;
+  padding-top: 20px;
+}
+
+.nav-menu .ant-menu-item-disabled .ant-menu-title-content {
+  color: #a9a7a7 !important;
+  opacity: 0.6;
+}

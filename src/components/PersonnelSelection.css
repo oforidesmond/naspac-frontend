@@ -170,3 +170,8 @@
   background-color: #5B3418 !important;
   border-color: #5B3418 !important;
 }
+
+.ant-menu-item-disabled .sidebar-icon,
+.ant-menu-item-disabled span {
+  color: #a9a7a7 !important;
+}

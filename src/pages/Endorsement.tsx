@@ -462,7 +462,7 @@ const Endorsement: React.FC = () => {
             modalContent?.type === 'Appointment Letter' && statusFilter !== 'ENDORSED' && (
               <Button
                 key="endorse"
-                className="!bg-[#28a745] !border-0"
+                className="!bg-[#34515c] hover:!bg-[#2c3e50] !border-0"
                 type="primary"
                 onClick={handleEndorse}
                 loading={loading}
@@ -472,7 +472,7 @@ const Endorsement: React.FC = () => {
             ),
             <Button
               key="close"
-              className="!bg-[#c95757] !border-0"
+              className="!bg-[#696767] hover:!bg-[#5f5d5d] !border-0"
               onClick={() => setModalVisible(false)}
             >
               Close

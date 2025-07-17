@@ -1,162 +1,263 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, Button, Typography, Modal, Form, Input, Space } from 'antd';
-// import { PlusOutlined } from '@ant-design/icons';
+import { Table, Select, Input, Button, Typography, Space, Modal, Tooltip, Checkbox } from 'antd';
+import { SearchOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import { useAuth } from '../AuthContext';
 import '../components/PersonnelSelection.css';
 
 const { Option } = Select;
 const { Text } = Typography;
 
-interface Department {
+interface Submission {
   id: number;
-  name: string;
-  supervisorId: number;
-  supervisorName: string;
-}
-
-interface Personnel {
-  id: number;
-  name: string;
+  fullName: string;
   nssNumber: string;
-  department: { id: number; name: string } | null;
-  submissions: {
-    id: number;
-    fullName: string;
-    nssNumber: string;
-    programStudied: string;
-    divisionPostedTo: string;
-    status: string;
-  }[];
-  supervisor: { id: number; name: string } | null;
+  gender: string;
+  email: string;
+  placeOfResidence: string;
+  phoneNumber: string;
+  universityAttended: string;
+  regionOfSchool: string;
+  yearOfNSS: string;
+  divisionPostedTo: string;
+  postingLetterUrl: string;
+  appointmentLetterUrl: string;
+  verificationFormUrl: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  programStudied: string;
 }
 
-interface Supervisor {
-  id: number;
-  name: string;
-  role: 'ADMIN' | 'STAFF' | 'SUPERVISOR';
-}
-
-const ManagePersonnel: React.FC = () => {
+const Endorsement: React.FC = () => {
   const { role } = useAuth();
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [filteredPersonnel, setFilteredPersonnel] = useState<Personnel[]>([]);
-  const [personnel, setPersonnel] = useState<Personnel[]>([]);
-  const [departmentFilter, setDepartmentFilter] = useState<string>('All');
-  const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>('ENDORSED');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [createModalVisible, setCreateModalVisible] = useState(false);
-  const [form] = Form.useForm();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState<{ url: string; type: string; id?: number } | null>(null);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [shortlistModalVisible, setShortlistModalVisible] = useState(false);
+  const [validatedCount, setValidatedCount] = useState<number>(0);
 
-  // Fetch departments and personnel
+   // Fetch validated count
   useEffect(() => {
-    const fetchDepartmentsAndPersonnel = async () => {
+    const fetchValidatedCount = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/users/submission-status-counts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            statuses: ['VALIDATED'],
+          }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setValidatedCount(data.VALIDATED || 0);
+        } else {
+          toast.error(data.message || 'Failed to load validated count');
+        }
+      } catch (error) {
+        toast.error('Failed to load validated count');
+      }
+    };
+   if (role && ['ADMIN', 'STAFF'].includes(role)) {
+    fetchValidatedCount();
+    }
+  }, [role]);
+
+  // Fetch submissions
+  useEffect(() => {
+    const fetchSubmissions = async () => {
       setLoading(true);
       try {
-        // Fetch departments
-        const deptResponse = await fetch('http://localhost:3000/users/departments', {
+        const response = await fetch('http://localhost:3000/users/submissions', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
-        const deptData: Department[] = await deptResponse.json();
-        if (!deptResponse.ok) {
-          throw new Error((deptData as any).message || 'Failed to load departments');
+        const data: Submission[] = await response.json();
+        if (response.ok) {
+          // Filter for ENDORSED and VALIDATED status only
+         const filteredSubmissions = data.filter((s) => ['ENDORSED', 'VALIDATED'].includes(s.status));
+          setSubmissions(filteredSubmissions);
+          setFilteredSubmissions(statusFilter === 'All' 
+            ? filteredSubmissions 
+            : filteredSubmissions.filter((s) => s.status === statusFilter));
+        } else {
+          toast.error((data as any).message || 'Failed to load submissions');
         }
-
-        // Fetch personnel
-       const personnelResponse = await fetch('http://localhost:3000/users/personnel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ statuses: ['VALIDATED', 'COMPLETED'] }),
-      });
-      const personnelData: Personnel[] = await personnelResponse.json();
-      if (!personnelResponse.ok) {
-        throw new Error((personnelData as any).message || 'Failed to load personnel');
-      }
-
-         setDepartments(deptData);
-      setPersonnel(personnelData);
-      setFilteredPersonnel(personnelData);
-      } catch (error: any) {
-        toast.error(error.message || 'Failed to load data');
+      } catch (error) {
+        toast.error('Failed to load submissions');
       } finally {
         setLoading(false);
       }
     };
+    fetchSubmissions();
+  }, []);
 
-    // Fetch supervisors for the modal
-    const fetchSupervisors = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/users/staff', {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        const data: Supervisor[] = await response.json();
-        if (response.ok) {
-          setSupervisors(data.filter((s) => s.role === 'SUPERVISOR'));
-        } else {
-          toast.error((data as any).message || 'Failed to load supervisors');
-        }
-      } catch (error) {
-        toast.error('Failed to load supervisors');
-      }
-    };
-
-    if (role && ['ADMIN', 'STAFF'].includes(role)) {
-      fetchDepartmentsAndPersonnel();
-      fetchSupervisors();
-    }
-  }, [role]);
-
-  // Filter logic
+  // Filter and search logic
   useEffect(() => {
-  let filtered = personnel;
-  if (departmentFilter !== 'All') {
-    filtered = personnel.filter((p) => p.department?.name === departmentFilter);
-  }
-    setFilteredPersonnel(filtered);
-  }, [departmentFilter, personnel]);
+    let filtered = submissions;
+    if (statusFilter !== 'All') {
+      filtered = filtered.filter((s) => s.status === statusFilter);
+    }
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (s) =>
+          s.fullName.toLowerCase().includes(lowerSearch) ||
+          s.nssNumber.toLowerCase().includes(lowerSearch) ||
+          s.email.toLowerCase().includes(lowerSearch) ||
+          s.universityAttended.toLowerCase().includes(lowerSearch),
+      );
+    }
+    setFilteredSubmissions(filtered);
+    setSelectedRows([]);
+  }, [statusFilter, searchTerm, submissions]);
 
-  // Handle create department
-  const handleCreateDepartment = async (values: { name: string; supervisorId: number }) => {
-    setLoading(true);
-    try {
-      const response = await fetch('http://localhost:3000/users/create-department', {
+  // Selection handlers
+  const handleSelectAll = () => {
+    if (selectedRows.length === filteredSubmissions.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(filteredSubmissions.map((s) => s.id));
+    }
+  };
+
+  const handleRowSelect = (id: number) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+    );
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
+    const exportData = (selectedRows.length > 0
+      ? filteredSubmissions.filter((s) => selectedRows.includes(s.id))
+      : filteredSubmissions
+    ).map((s) => ({
+      ID: s.id,
+      'Full Name': s.fullName,
+      'NSS Number': s.nssNumber,
+      Email: s.email,
+      Gender: s.gender,
+      'Place of Residence': s.placeOfResidence,
+      'Phone Number': s.phoneNumber,
+      'University Attended': s.universityAttended,
+      'Region of School': s.regionOfSchool,
+      'Year of NSS': s.yearOfNSS,
+      'Program Studied': s.programStudied,
+      'Division Posted To': s.divisionPostedTo,
+      'Posting Letter URL': s.postingLetterUrl,
+      'Appointment Letter URL': s.appointmentLetterUrl,
+      Status: s.status,
+      'Created At': s.createdAt,
+      'Updated At': s.updatedAt,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Submissions');
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, 'personnel_submissions.xlsx');
+  };
+
+  // Handle letter view
+  const showLetter = (url: string, type: string, id?: number) => {
+     console.log('Showing letter:', { url, type, id });
+    setModalContent({ url, type, id });
+    setModalVisible(true);
+  };
+
+  // Handle download
+  const handleDownload = () => {
+    if (modalContent?.url) {
+      window.open(modalContent.url, '_blank');
+    }
+  };
+
+  // Handle validate action
+ const handleValidate = async () => {
+  if (!modalContent?.id) return;
+   console.log('Validating submission:', modalContent.id);
+  setLoading(true);
+  try {
+    const response = await fetch(`http://localhost:3000/users/update-submission-status/${modalContent.id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({
+       status: 'VALIDATED',
+      }),
+    });
+    if (response.ok) {
+      // Update local state
+      setSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
+        setFilteredSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
+        setModalVisible(false);
+        setValidatedCount((prev) => prev + 1);
+        toast.success('Appointment letter validated successfully');
+    } else {
+      const errorData = await response.json();
+      toast.error(errorData.message || 'Failed to validate appointment letter');
+    }
+  } catch (error: any) {
+    toast.error(error.message || 'Failed to validate appointment letter');
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Handle bulk endorse
+  const handleShortlistConfirm = async () => {
+  setLoading(true);
+  try {
+    const updatePromises = selectedRows.map(async (id) => {
+      const response = await fetch(`http://localhost:3000/users/update-submission-status/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
-          name: values.name,
-          supervisorId: Number(values.supervisorId), // Ensure supervisorId is a number
+         status: 'VALIDATED',
         }),
       });
-      const data = await response.json();
-      if (response.ok) {
-        setDepartments((prev) => [...prev, { ...data, supervisorName: supervisors.find((s) => s.id === data.supervisorId)?.name || 'Unknown' }]);
-        setCreateModalVisible(false);
-        form.resetFields();
-        toast.success('Department created successfully');
-      } else {
-        toast.error(data.message || 'Failed to create department');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to validate appointment letter');
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create department');
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
 
-  // Restrict to ADMIN or STAFF
-  if (!role || !['ADMIN', 'STAFF'].includes(role)) {
+    await Promise.all(updatePromises);
+
+    // Update local state
+    setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+      setFilteredSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+      setValidatedCount((prev) => prev + selectedRows.length);
+      setSelectedRows([]);
+      setShortlistModalVisible(false);
+      toast.success(`${selectedRows.length} verification forms validated`);
+  } catch (error: any) {
+    toast.error(error.message || 'Failed to validate verification forms');
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Restrict to ADMIN
+  if (!role || (role !== 'ADMIN' && role !== 'STAFF')) {
     return (
       <div className="flex items-center justify-center h-full">
         <Text className="text-lg text-[#3C3939]">Access restricted.</Text>
@@ -164,50 +265,117 @@ const ManagePersonnel: React.FC = () => {
     );
   }
 
+  // Truncate text helper
+  const truncateText = (text: string, maxLength: number = 15) =>
+    text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+
   // Table columns
   const columns = [
     {
+      title: (
+        <Checkbox
+          checked={selectedRows.length === filteredSubmissions.length && filteredSubmissions.length > 0}
+          indeterminate={selectedRows.length > 0 && selectedRows.length < filteredSubmissions.length}
+          onChange={handleSelectAll}
+          disabled={statusFilter === 'VALIDATED'}
+        />
+      ),
+      key: 'selection',
+      width: 10,
+      render: (_: any, record: Submission) => (
+         <Checkbox
+          checked={selectedRows.includes(record.id)}
+          onChange={() => handleRowSelect(record.id)}
+          disabled={statusFilter === 'VALIDATED'}
+        />
+      ),
+    },
+    {
       title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      width: 180,
+      dataIndex: 'fullName',
+      key: 'fullName',
+      width: 120,
     },
     {
       title: 'NSS No.',
       dataIndex: 'nssNumber',
       key: 'nssNumber',
-      width: 150,
+      width: 100,
     },
     {
-    title: 'Department',
-    dataIndex: ['department', 'name'],
-    key: 'department',
-    width: 200,
-    render: (name: string | undefined) => name || 'Unassigned',
+      title: 'Gender',
+      dataIndex: 'gender',
+      key: 'gender',
+      width: 80,
     },
     {
-    title: 'Program Studied',
-    key: 'programStudied',
-    width: 180,
-    render: (record: Personnel) => record.submissions[0]?.programStudied || 'N/A',
-  },
-  {
-    title: 'Supervisor',
-    dataIndex: ['supervisor', 'name'],
-    key: 'supervisor',
-    width: 200,
-    render: (name: string | undefined) => name || 'Unassigned',
+      title: 'Phone',
+      dataIndex: 'phoneNumber',
+      key: 'phoneNumber',
+      width: 110,
     },
-      {
-    title: 'Status',
-    key: 'status',
-    width: 150,
-    render: (record: Personnel) => (
-      <span className={`status-${record.submissions[0]?.status.toLowerCase()}`}>
-        {record.submissions[0]?.status.charAt(0).toUpperCase() + record.submissions[0]?.status.slice(1).toLowerCase()}
-      </span>
-    ),
-  },
+    {
+      title: 'Division',
+      dataIndex: 'divisionPostedTo',
+      key: 'divisionPostedTo',
+      width: 130,
+      render: (text: string) => (
+        <Tooltip title={text}>
+          <span>{truncateText(text)}</span>
+        </Tooltip>
+      ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 80,
+      render: (status: string) => (
+        <span className={`status-${status.toLowerCase()}`}>
+          {status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()}
+        </span>
+      ),
+    },
+    {
+      title: 'Verif. Forms',
+      key: 'verificationFormUrl',
+      width: 110,
+      render: (_: any, record: Submission) =>
+        record.verificationFormUrl ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Button
+              type="link"
+              onClick={(e) => {
+                e.stopPropagation();
+                showLetter(record.verificationFormUrl, 'Verification Form', record.id);
+              }}
+              icon={<EyeOutlined style={{ fontSize: '16px', color: '#5B3418' }} />}
+            />
+          </div>
+        ) : (
+          ''
+        ),
+    },
+    {
+      title: 'Appt. Letter',
+      key: 'appointmentLetterUrl',
+      width: 110,
+      render: (_: any, record: Submission) =>
+        record.appointmentLetterUrl ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Button
+              type="link"
+              onClick={(e) => {
+                e.stopPropagation();
+                showLetter(record.appointmentLetterUrl, 'Appointment Letter', record.id);
+              }}
+              icon={<EyeOutlined style={{ fontSize: '16px', color: '#5B3418' }} />}
+            />
+          </div>
+        ) : (
+          ''
+        ),
+    },
   ];
 
   return (
@@ -216,101 +384,125 @@ const ManagePersonnel: React.FC = () => {
         <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">Manage Personnel</h2>
         <div className="flex flex-col sm:flex-row justify-between mb-3 gap-2">
           <Space>
-            {/* <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setCreateModalVisible(true)}
-              className="!bg-[#5B3418] hover:!bg-[#4a2c1c] !border-0"
-            >
-              Create Department
-            </Button> */}
+            <Text className="text-base font-semibold text-[#5B3418] bg-amber-100 px-3 py-1 rounded-md">
+              Total Validated: {validatedCount}
+            </Text>
+            {selectedRows.length > 0 && statusFilter !== 'VALIDATED' && (
+              <Space>
+                <Text>{`${selectedRows.length} selected`}</Text>
+                <Button
+                  type="primary"
+                  onClick={() => setShortlistModalVisible(true)}
+                  className="!bg-[#5B3418] hover:!bg-[#4a2c1c] !border-0"
+                >
+                  Validate
+                </Button>
+              </Space>
+            )}
             <Select
-              value={departmentFilter}
-              onChange={setDepartmentFilter}
+              value={statusFilter}
+              onChange={setStatusFilter}
               className="rounded-md w-fit sm:w-48"
-              placeholder="Filter by department"
+              placeholder="Filter by status"
             >
-              <Option value="All">All</Option>
-              {departments.map((dept) => (
-                <Option key={dept.id} value={dept.name}>
-                  {dept.name}
-                </Option>
-              ))}
+              <Option value="ENDORSED">Validate</Option>
+              <Option value="VALIDATED">Completed Validation</Option>
+              {/* <Option value="All">All</Option> */}
             </Select>
+          </Space>
+          <Space className="w-full sm:w-auto">
+            <Input
+              placeholder="Search by name, NSS, email, or university"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              prefix={<SearchOutlined />}
+              className="rounded-md border-[#a9a7a7] w-full sm:w-auto"
+            />
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              onClick={exportToExcel}
+              className="export-button !border-amber-50 w-full sm:w-auto"
+            >
+              Export
+            </Button>
           </Space>
         </div>
         <Table
           columns={columns}
-          dataSource={filteredPersonnel}
+          dataSource={filteredSubmissions}
           rowKey="id"
           loading={loading}
           className="rounded-md"
           scroll={{ x: 'max-content' }}
           size="small"
           pagination={{ pageSize: 10 }}
+          onRow={(record) => ({
+            onClick: (event) => {
+              if (!(event.target as HTMLElement).closest('.ant-btn, .ant-checkbox') && statusFilter !== 'VALIDATED') {
+                handleRowSelect(record.id);
+              }
+            },
+          })}
         />
         <Modal
-          title="Create New Department"
-          open={createModalVisible}
-          onCancel={() => {
-            setCreateModalVisible(false);
-            form.resetFields();
-          }}
-          footer={null}
+          title={modalContent?.type}
+          open={modalVisible}
+          onCancel={() => setModalVisible(false)}
+          footer={[
+            <Button
+              key="download"
+              className="!bg-[#5B3418] !border-0"
+              type="default"
+              onClick={handleDownload}
+            >
+              Download
+            </Button>,
+            modalContent?.type === 'Verification Form' && statusFilter !== 'VALIDATED' && (
+              <Button
+                key="validate"
+                className="!bg-[#34515c] hover:!bg-[#2c3e50] !border-0"
+                type="primary"
+                onClick={handleValidate}
+                loading={loading}
+              >
+                Validate
+              </Button>
+            ),
+            <Button
+              key="close"
+              className="!bg-[#696767] hover:!bg-[#5f5d5d] !border-0"
+              onClick={() => setModalVisible(false)}
+            >
+              Close
+            </Button>,
+          ].filter(Boolean)}
+          width={800}
           className="centered-modal"
         >
-          <Form
-            form={form}
-            onFinish={handleCreateDepartment}
-            layout="vertical"
-            className="mt-4"
-          >
-            <Form.Item
-              name="name"
-              label="Department Name"
-              rules={[{ required: true, message: 'Please enter department name' }]}
-            >
-              <Input placeholder="Enter department name" />
-            </Form.Item>
-            <Form.Item
-              name="supervisorId"
-              label="Supervisor"
-              rules={[{ required: true, message: 'Please select a supervisor' }]}
-            >
-              <Select placeholder="Select supervisor">
-                {supervisors.map((supervisor) => (
-                  <Option key={supervisor.id} value={supervisor.id}>
-                    {supervisor.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item>
-              <Space>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  className="!bg-[#5B3418] hover:!bg-[#4a2c1c] !border-0"
-                >
-                  Create
-                </Button>
-                <Button
-                  className="!bg-[#c95757] !border-0"
-                  onClick={() => {
-                    setCreateModalVisible(false);
-                    form.resetFields();
-                  }}
-                >
-                  Cancel
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
+          {modalContent?.url && (
+            <iframe
+              src={modalContent.url}
+              style={{ width: '100%', height: '80vh', border: 'none' }}
+              title={modalContent.type}
+            />
+          )}
+        </Modal>
+        <Modal
+          title="Confirm Validation"
+          open={shortlistModalVisible}
+          onOk={handleShortlistConfirm}
+          onCancel={() => setShortlistModalVisible(false)}
+          okText="Confirm"
+          cancelText="Cancel"
+          okButtonProps={{ className: '!bg-[#5B3418] !border-0' }}
+          cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
+        >
+          <p>Are you sure you want to validate {selectedRows.length} personnel?</p>
         </Modal>
       </div>
     </div>
   );
 };
 
-export default ManagePersonnel;
+export default Endorsement;

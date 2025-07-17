@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Avatar, Typography, message, Select } from 'antd';
-import { BellFilled, UserOutlined, SettingOutlined } from '@ant-design/icons';
+import { Card, Avatar, Typography, message, Select, Spin, Progress, Alert } from 'antd';
+import { BellFilled, UserOutlined, SettingOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const { Text } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
+
+interface PersonnelStatus {
+  submissionStatus: string | null;
+  completionPercentage: number;
+  serviceDays: number;
+}
 
 interface Department {
   departmentId: number;
@@ -32,11 +38,23 @@ interface ReportCounts {
 }
 
 const Home: React.FC = () => {
-  const { role } = useAuth();
+  const { role, name, isLoading: authLoading, userId } = useAuth();
    const navigate = useNavigate();
   const [reportData, setReportData] = useState<ReportCounts | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
+  const [statusData, setStatusData] = useState<PersonnelStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+   useEffect(() => {
+    const hasReloaded = sessionStorage.getItem("reloaded");
+
+    if (!hasReloaded) {
+      sessionStorage.setItem("reloaded", "true");
+      window.location.reload();
+    }
+  }, []);
 
   // Fetch report counts from the endpoint
   useEffect(() => {
@@ -57,6 +75,42 @@ const Home: React.FC = () => {
     };
     fetchReportCounts();
   }, []);
+
+  // Fetch personnel status
+  useEffect(() => {
+    const fetchPersonnelStatus = async () => {
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/users/personnel-status', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch personnel status');
+        }
+
+        const data = await response.json();
+        setStatusData({
+          submissionStatus: data.submissionStatus || 'N/A',
+          completionPercentage: data.completionPercentage || 0,
+          serviceDays: data.serviceDays || 0,
+        });
+      } catch (err) {
+        setError('Unable to load personnel status');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPersonnelStatus();
+  }, [userId]);
 
   // Role-based dashboard content
   const renderDashboardContent = () => {
@@ -309,11 +363,17 @@ const Home: React.FC = () => {
           <div className="relative flex flex-col sm:flex-row items-center sm:items-start justify-between p-6 sm:p-8 rounded-lg shadow-lg bg-gradient-to-r from-[#5b3418] to-[#754726] text-white overflow-hidden">
             <div className="flex-1 mb-4 sm:mb-0 sm:pr-6 z-10">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold mb-2">
-                Welcome, Written-Right
+                Welcome, {authLoading ? 'Loading...' : name || ''}
               </h2>
               <p className="text-sm sm:text-base">
-                Your service period has not yet started. Here is your dashboard overview.
-              </p>
+              {isLoading ? (
+                'Loading status...'
+              ) : statusData?.submissionStatus === 'VALIDATED' ? (
+                'Your verification is complete! Enjoy your National Service and make the most of this exciting journey.'
+              ) : (
+                'Your service period has not yet started. Here is your dashboard overview.'
+              )}
+            </p>
             </div>
             <div className="absolute top-0 right-0 bottom-0">
               <img
@@ -326,45 +386,85 @@ const Home: React.FC = () => {
         </section>
 
         {/* Section 2: Analytics */}
-        <section className="mb-6 sm:mb-8">
-          <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-[#3C3939] mb-4">
-            Analytics of the Overall Progress
-          </h3>
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-            <div className="flex-1 bg-white p-4 sm:p-6 rounded-lg shadow relative bg-[url('/background-pattern.svg')] bg-cover bg-center bg-no-repeat bg-opacity-10">
-              <div className="flex justify-between items-stretch h-full">
-                <div className="flex flex-col justify-between">
-                  <h4 className="text-lg sm:text-xl font-semibold text-[#625E5C]">
-                    Status
-                  </h4>
-                  <p className="text-sm sm:text-base text-[#a59f9f]">Pending Review</p>
-                </div>
-                <img
-                  src="/spinner.svg"
-                  alt="Spinner"
-                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain self-start"
-                />
+      <section className="mb-6 sm:mb-8">
+        <Title level={4} style={{ color: '#3C3939', marginBottom: 16 }}>
+          Analytics of the Overall Progress
+        </Title>
+        {error && (
+          <Alert
+            message={error}
+            type="error"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+          {/* Status Card */}
+          <Card
+            className="flex-1"
+            bodyStyle={{ padding: '16px 24px' }}
+            style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <Title level={5} style={{ color: '#625E5C', marginBottom: 8 }}>
+                  Status
+                </Title>
+                <Text
+                  style={{
+                    color: '#a59f9f',
+                    fontSize: '14px',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {isLoading ? <Spin size="small" /> : statusData?.submissionStatus || 'N/A'}
+                </Text>
               </div>
-            </div>
-            <div className="flex-1 bg-white p-4 sm:p-6 rounded-lg shadow relative bg-[url('/background-pattern.svg')] bg-cover bg-center bg-no-repeat bg-opacity-10">
-              <h4 className="text-lg sm:text-xl font-semibold text-[#625E5C] mb-2 text-left">
-                Process Completion
-              </h4>
-              <img
-                src="/progress.svg"
-                alt="Progress"
-                className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+              <ClockCircleOutlined
+                style={{ fontSize: '24px', color: '#5B3418' }}
               />
             </div>
-            <div className="flex-1 bg-white p-4 sm:p-6 rounded-lg shadow relative bg-[url('/background-pattern.svg')] bg-cover bg-center bg-no-repeat bg-opacity-10">
-              <h4 className="text-lg sm:text-xl font-semibold text-[#625E5C] mb-2 text-left">
-                Service Days
-              </h4>
-              <p className="text-2xl sm:text-3xl font-bold text-[#5B3418]">0</p>
-              <p className="text-sm sm:text-base text-[#5B3418]">completed</p>
-            </div>
-          </div>
-        </section>
+          </Card>
+
+          {/* Process Completion Card */}
+          <Card
+            className="flex-1"
+            bodyStyle={{ padding: '16px 24px' }}
+            style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
+          >
+            <Title level={5} style={{ color: '#625E5C', marginBottom: 8 }}>
+              Process Completion
+            </Title>
+            <Progress
+              percent={isLoading ? 0 : statusData?.completionPercentage || 0}
+              status="active"
+              strokeColor="#5B3418"
+              showInfo={true}
+              style={{ marginTop: 8 }}
+            />
+          </Card>
+
+          {/* Service Days Card */}
+          <Card
+            className="flex-1"
+            bodyStyle={{ padding: '16px 24px' }}
+            style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
+          >
+            <Title level={5} style={{ color: '#625E5C', marginBottom: 8 }}>
+              Service Days
+            </Title>
+            <Text
+              strong
+              style={{ fontSize: '24px', color: '#5B3418', display: 'block' }}
+            >
+              {isLoading ? <Spin size="small" /> : statusData?.serviceDays || 0}
+            </Text>
+            <Text style={{ fontSize: '14px', color: '#5B3418' }}>
+              completed
+            </Text>
+          </Card>
+        </div>
+      </section>
 
         {/* Section 3: Notifications */}
         <section>

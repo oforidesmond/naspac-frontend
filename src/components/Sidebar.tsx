@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Layout, Menu, Button, Tooltip } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Layout, Menu, Button, Tooltip, message, Modal } from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -14,10 +14,116 @@ import { useAuth } from '../AuthContext';
 
 const { Sider } = Layout;
 
+interface PersonnelStatus {
+  submissionStatus: string | null;
+}
+
 const Sidebar: React.FC = () => {
-  const { role, logout } = useAuth();
+   const { role, logout, userId } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const [statusData, setStatusData] = useState<PersonnelStatus | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [uploadModalVisible, setUploadModalVisible] = useState(false); 
+   const [hasUploaded, setHasUploaded] = useState(false);
+   // Fetch personnel status for PERSONNEL role
+  useEffect(() => {
+    const fetchPersonnelStatus = async () => {
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/users/personnel-status', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch personnel status');
+        }
+
+        const data = await response.json();
+        setStatusData({
+          submissionStatus: data.submissionStatus || null,
+        });
+      } catch (err) {
+        message.error('Unable to load personnel status');
+        console.error(err);
+      } finally {
+        setStatusLoading(false);
+      }
+    };
+
+    fetchPersonnelStatus();
+  }, [role, userId]);
+
+  // Handle upload verification form
+  const handleUploadVerification = () => {
+    setUploadModalVisible(true); // Show confirmation modal
+  };
+
+   const handleUploadConfirm = () => {
+    // Trigger file picker
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/pdf';
+    input.onchange = async (event: Event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) {
+        message.error('No file selected');
+        return;
+      }
+      if (file.type !== 'application/pdf') {
+        message.error('Only PDF files are allowed');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('verificationForm', file);
+
+      try {
+        const response = await fetch('http://localhost:3000/users/submit-verification-form', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: formData,
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to upload verification form');
+        }
+        message.success('Verification form uploaded successfully');
+        setUploadModalVisible(false);
+        setHasUploaded(true); 
+        // Refresh status
+        const token = localStorage.getItem('token');
+        const statusResponse = await fetch('http://localhost:3000/users/personnel-status', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
+        if (statusResponse.ok) {
+          const data = await statusResponse.json();
+          setStatusData({
+            submissionStatus: data.submissionStatus || null,
+          });
+        }
+      } catch (err: any) {
+        message.error(err.message || 'Failed to upload verification form');
+        console.error(err);
+      }
+    };
+    input.click();
+  };
 
   // Define route mappings for menu items
   const mainRouteMap: { [key: string]: string } = {
@@ -94,17 +200,20 @@ const Sidebar: React.FC = () => {
       {
         key: '3',
         icon: <PrinterOutlined className="sidebar-icon" />,
-        label: 'Endorsed Posting Letter',
+        label: 'Endorsed Letter',
+        disabled: statusLoading || statusData?.submissionStatus !== 'ENDORSED',
       },
       {
         key: '4',
         icon: <PrinterOutlined className="sidebar-icon" />,
-        label: 'Upload NSS Document',
+         label: hasUploaded ? 'Verification Uploaded' : 'Upload Verification',
+        disabled: statusLoading || statusData?.submissionStatus !== 'ENDORSED' || hasUploaded,
       },
       {
         key: '5',
         icon: <PrinterOutlined className="sidebar-icon" />,
         label: 'Appointment Letter',
+        disabled: statusLoading || statusData?.submissionStatus !== 'VALIDATED',
       },
     ];
   };
@@ -119,10 +228,47 @@ const Sidebar: React.FC = () => {
     setCollapsed(!collapsed);
   };
 
-  const handleMenuClick = ({ key }: { key: string }) => {
-    const path = mainRouteMap[key] || settingsRouteMap[key];
-    if (path) {
-      navigate(path);
+  const handleMenuClick = async ({ key }: { key: string }) => {
+    if (role === 'PERSONNEL' && key === '3') {
+      // Handle download for Endorsed Posting Letter
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/documents/personnel/download-appointment-letter?type=endorsed', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/pdf',
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to download endorsed posting letter');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'endorsed-appointment-letter.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        message.success('Endorsed posting letter downloaded successfully');
+      } catch (err) {
+        message.error('Failed to download endorsed posting letter');
+        console.error(err);
+      }
+    } else if (role === 'PERSONNEL' && key === '4') {
+      handleUploadVerification(); // Handle upload verification
+    } else {
+      // Handle navigation for other menu items
+      const path = mainRouteMap[key] || settingsRouteMap[key];
+      if (path) {
+        navigate(path);
+      }
     }
   };
 
@@ -140,7 +286,7 @@ const Sidebar: React.FC = () => {
       <header className="flex justify-between items-center pt-4 px-4">
         {!collapsed && (
           <h1 className="font-medium text-white text-xl sm:text-2xl">
-            NSP-Portal
+            NASPAC
           </h1>
         )}
         <Button
@@ -165,6 +311,7 @@ const Sidebar: React.FC = () => {
               </span>
             </Tooltip>
           ),
+          disabled: item.disabled,
         }))}
         className="bg-transparent border-0 nav-menu"
       />
@@ -196,6 +343,21 @@ const Sidebar: React.FC = () => {
           <span className="font-medium text-sm truncate">Logout</span>
         )}
       </Button>
+        <Modal
+        title="Upload Verification Form"
+        open={uploadModalVisible}
+        onOk={handleUploadConfirm}
+        onCancel={() => setUploadModalVisible(false)}
+        okText="Continue"
+        cancelText="Cancel"
+        okButtonProps={{ className: '!bg-[#5B3418] !border-0' }}
+        cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
+        centered
+        className="modern-modal"
+      >
+        <p>Please upload your verification form. The file must be in <strong>PDF</strong> format.</p>
+        <p>Are you sure you want to proceed?</p>
+      </Modal>
     </Sider>
   );
 };

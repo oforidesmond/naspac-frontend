@@ -1,10 +1,11 @@
-// AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-// import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 interface AuthContextType {
   role: 'ADMIN' | 'STAFF' | 'SUPERVISOR' | 'PERSONNEL' | null;
+  userId: number | null;
+  email: string | null;
+  name: string | null;
   setRole: (role: 'ADMIN' | 'STAFF' | 'SUPERVISOR' | 'PERSONNEL' | null) => void;
   logout: () => void;
   isLoading: boolean;
@@ -12,6 +13,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   role: null,
+  userId: null,
+  email: null,
+  name: null,
   setRole: () => {},
   logout: () => {},
   isLoading: false,
@@ -19,40 +23,73 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [role, setRole] = useState<'ADMIN' | 'STAFF' | 'SUPERVISOR' | 'PERSONNEL' | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [name, setName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  // const navigate = useNavigate();
 
   useEffect(() => {
-    const validateToken = async () => {
+    const fetchUserData = async () => {
       const token = localStorage.getItem('token');
-       if (!token) {
+      if (!token) {
         setIsLoading(false);
         return;
       }
-        try {
-          const response = await fetch('http://localhost:3000/auth/validate', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            credentials: 'include',
-          });
-          const data = await response.json();
-         if (response.ok && data.success && data.role) {
-            setRole(data.role);
-          } else {
-            localStorage.removeItem('token');
-            setRole(null);
-          }
-        } catch (error) {
-          localStorage.removeItem('token');
-          setRole(null);
-      }finally {
+
+      try {
+        // Step 1: Validate token
+        const validateResponse = await fetch('http://localhost:3000/auth/validate', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
+        const validateData = await validateResponse.json();
+
+        if (!validateResponse.ok || !validateData.success || !validateData.role) {
+          throw new Error('Invalid token or user data');
+        }
+
+        // Set initial data from validate endpoint
+        setRole(validateData.role);
+        setUserId(validateData.userId);
+        setEmail(validateData.email || null);
+        setName(validateData.name || null);
+
+        // Step 2: Fetch latest profile data from /users/profile
+        const profileResponse = await fetch('http://localhost:3000/users/profile', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
+        const profileData = await profileResponse.json();
+
+        if (profileResponse.ok) {
+          setName(profileData.name || validateData.name || null); // Prefer profile name
+          setEmail(profileData.email || validateData.email || null);
+          setRole(profileData.role || validateData.role || null);
+        } else {
+          console.warn('Failed to fetch profile data:', profileData);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        localStorage.removeItem('token');
+        setRole(null);
+        setUserId(null);
+        setEmail(null);
+        setName(null);
+        toast.error('Session expired or invalid. Please log in again.');
+      } finally {
         setIsLoading(false);
       }
     };
-    validateToken();
+
+    fetchUserData();
   }, []);
 
   const logout = async () => {
@@ -64,6 +101,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       localStorage.removeItem('token');
       setRole(null);
+      setUserId(null);
+      setEmail(null);
+      setName(null);
       toast.success('Logged out successfully');
       window.history.back();
     } catch (error) {
@@ -72,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ role, setRole, logout, isLoading }}>
+    <AuthContext.Provider value={{ role, userId, email, name, setRole, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

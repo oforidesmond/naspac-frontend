@@ -24,7 +24,7 @@ const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
 
   // Define carousel images
-  const images: string[] = ["/carousel-image-3.png", "/carousel-image-4.png"];
+   const images: string[] = ["/carousel-image-1.jpg", "/carousel-image-2.jpg", "/carousel-image-3.jpg", "/carousel-image-4.png", "/carousel-image-5.jpg", "/carousel-image-6.jpg", "/carousel-image-7.jpg"];
 
   // Extract nssNumber and token from URL
   const nssNumber = searchParams.get("nssNumber");

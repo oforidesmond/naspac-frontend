@@ -1,14 +1,24 @@
 import React from 'react';
-import { BellFilled, UserOutlined } from '@ant-design/icons';
+import { BellFilled, UserOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 import { Badge, Dropdown, Menu, Avatar, Typography } from 'antd';
-import { LogoutOutlined, SettingOutlined } from '@ant-design/icons';
+import { useAuth } from '../AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const { Text } = Typography;
 
 const Header: React.FC = () => {
-  const userName = 'John Dough';
-  const userEmail = 'john.dough@example.com'; 
-  const userRole = 'Personnel';
+  const { name, email, role, logout, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Handle logout action
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login'); // Redirect to login page after logout
+    } catch (error) {
+      // Error is handled in useAuth.logout with toast
+    }
+  };
 
   // Notification Dropdown Content
   const notificationMenu = (
@@ -76,23 +86,23 @@ const Header: React.FC = () => {
 
   // Profile Dropdown Content
   const profileMenu = (
-    <div className="w-64 bg-white shadow-lg rounded-lg p-4">
+    <div className="w-70 bg-white shadow-lg rounded-lg p-4">
       <div className="flex items-center gap-3 mb-4">
         <Avatar size={40} icon={<UserOutlined />} />
         <div>
           <Text strong className="text-sm">
-            {userName}
+            {isLoading ? 'Loading...' : name || 'User'}
           </Text>
           <Text type="secondary" className="text-xs block">
-            {userEmail}
+            {isLoading ? 'Loading...' : email || ''}
           </Text>
           <Text type="secondary" className="text-xs capitalize">
-            {userRole}
+            {isLoading ? 'Loading...' : role || 'Guest'}
           </Text>
         </div>
       </div>
       <Menu selectable={false}>
-        <Menu.Item key="logout" icon={<LogoutOutlined />}>
+        <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
           Logout
         </Menu.Item>
       </Menu>
@@ -113,7 +123,9 @@ const Header: React.FC = () => {
           <Dropdown overlay={profileMenu} trigger={['click']} placement="bottomRight">
             <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
               <UserOutlined className="text-base sm:text-lg" />
-              <span className="hidden sm:inline text-sm">{userName}</span>
+              <span className="hidden sm:inline text-sm">
+                {isLoading ? 'Loading...' : name || 'User'}
+              </span>
             </div>
           </Dropdown>
 
