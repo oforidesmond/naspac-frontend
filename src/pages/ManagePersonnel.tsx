@@ -208,6 +208,7 @@ const Endorsement: React.FC = () => {
         setModalVisible(false);
         setValidatedCount((prev) => prev + 1);
         toast.success('Appointment letter validated successfully');
+        window.location.reload();
     } else {
       const errorData = await response.json();
       toast.error(errorData.message || 'Failed to validate appointment letter');
@@ -249,6 +250,7 @@ const Endorsement: React.FC = () => {
       setSelectedRows([]);
       setShortlistModalVisible(false);
       toast.success(`${selectedRows.length} verification forms validated`);
+      window.location.reload();
   } catch (error: any) {
     toast.error(error.message || 'Failed to validate verification forms');
   } finally {
@@ -498,7 +500,7 @@ const Endorsement: React.FC = () => {
           okButtonProps={{ className: '!bg-[#5B3418] !border-0' }}
           cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
         >
-          <p>Are you sure you want to validate {selectedRows.length} personnel?</p>
+          <p>Are you sure you want to validate {selectedRows.length} personnel and send them appointment letters?</p>
         </Modal>
       </div>
     </div>

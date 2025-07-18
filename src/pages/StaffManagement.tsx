@@ -88,6 +88,7 @@ const StaffManagement: React.FC = () => {
         setCreateModalVisible(false);
         form.resetFields();
         toast.success('User created successfully');
+        window.location.reload();
       } else {
         toast.error(data.message || 'Failed to create user');
       }

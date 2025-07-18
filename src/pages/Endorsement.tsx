@@ -208,6 +208,7 @@ const Endorsement: React.FC = () => {
         setModalVisible(false);
         setEndorsedCount((prev) => prev + 1);
         toast.success('Appointment letter endorsed successfully');
+        window.location.reload();
     } else {
       const errorData = await response.json();
       toast.error(errorData.message || 'Failed to endorse appointment letter');
@@ -250,6 +251,7 @@ const Endorsement: React.FC = () => {
       setSelectedRows([]);
       setShortlistModalVisible(false);
       toast.success(`${selectedRows.length} appointment letters endorsed`);
+      window.location.reload();
   } catch (error: any) {
     toast.error(error.message || 'Failed to endorse appointment letters');
   } finally {

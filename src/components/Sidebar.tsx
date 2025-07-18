@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Menu, Button, Tooltip, message, Modal } from 'antd';
+import { Layout, Menu, Button, Tooltip, message, Modal, Spin } from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -26,7 +26,9 @@ const Sidebar: React.FC = () => {
   const [statusLoading, setStatusLoading] = useState(true);
   const [uploadModalVisible, setUploadModalVisible] = useState(false); 
    const [hasUploaded, setHasUploaded] = useState(false);
-   // Fetch personnel status for PERSONNEL role
+   const [appointmentLoading, setAppointmentLoading] = useState(false); 
+  const [endorsedLoading, setEndorsedLoading] = useState(false);
+
   useEffect(() => {
     const fetchPersonnelStatus = async () => {
 
@@ -196,11 +198,16 @@ const Sidebar: React.FC = () => {
     // Personnel menu
     return [
       { key: '1', icon: <DashboardOutlined className="sidebar-icon" />, label: 'Dashboard' },
-      { key: '2', icon: <UserOutlined className="sidebar-icon" />, label: 'My Details' },
+      // { key: '2', icon: <UserOutlined className="sidebar-icon" />, label: 'My Details' },
       {
         key: '3',
         icon: <PrinterOutlined className="sidebar-icon" />,
-        label: 'Endorsed Letter',
+        label: (
+            <span className="flex items-center">
+              {endorsedLoading && <Spin size="small" className="mr-2" />}
+              Endorsed Letter
+            </span>
+          ),
         disabled: statusLoading || statusData?.submissionStatus !== 'ENDORSED',
       },
       {
@@ -212,8 +219,13 @@ const Sidebar: React.FC = () => {
       {
         key: '5',
         icon: <PrinterOutlined className="sidebar-icon" />,
-        label: 'Appointment Letter',
-        disabled: statusLoading || statusData?.submissionStatus !== 'VALIDATED',
+       label: (
+            <span className="flex items-center">
+              {appointmentLoading && <Spin size="small" className="mr-2" />}
+              Appointment Letter
+            </span>
+          ),
+        disabled: statusLoading || !['VALIDATED', 'COMPLETED'].includes(statusData?.submissionStatus ?? ''),
       },
     ];
   };
@@ -260,9 +272,46 @@ const Sidebar: React.FC = () => {
       } catch (err) {
         message.error('Failed to download endorsed posting letter');
         console.error(err);
+      } finally {
+        setEndorsedLoading(false);
       }
     } else if (role === 'PERSONNEL' && key === '4') {
       handleUploadVerification(); // Handle upload verification
+    } else if (role === 'PERSONNEL' && key === '5') {
+      // Handle download for Appointment Letter
+      setAppointmentLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/documents/personnel/download-appointment-letter?type=job_confirmation', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/pdf',
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to download appointment letter');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'job-confirmation-letter.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        message.success('Appointment letter downloaded successfully');
+      } catch (err) {
+        message.error('Failed to download appointment letter');
+        console.error(err);
+      } finally {
+        setAppointmentLoading(false);
+      }
     } else {
       // Handle navigation for other menu items
       const path = mainRouteMap[key] || settingsRouteMap[key];

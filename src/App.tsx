@@ -16,11 +16,23 @@ import Profile from './pages/Profile';
 import StaffManagement from './pages/StaffManagement';
 import DepartmentPlacements from './pages/DeptPlacements';
 import ManagePersonnel from './pages/ManagePersonnel';
+import { Spin } from 'antd';
+
+const centeredSpinStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100vh',
+};
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { role, isLoading } = useAuth();
-  if (isLoading) {
-    return <div>Loading...</div>;
+ if (isLoading) {
+    return (
+      <div style={centeredSpinStyle}>
+        <Spin size="large" />
+      </div>
+    );
   }
   if (!role) {
     console.log('No role, redirecting to /login');

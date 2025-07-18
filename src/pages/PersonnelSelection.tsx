@@ -262,6 +262,7 @@ useEffect(() => {
     setShortlistModalVisible(false);
     setSelectedDepartment(null);
     toast.success(`${selectedRows.length} personnel shortlisted and assigned to department`);
+    window.location.reload();
   } catch (error: any) {
       toast.error(error.message || 'Failed to shortlist personnel or assign to department');
     } finally {

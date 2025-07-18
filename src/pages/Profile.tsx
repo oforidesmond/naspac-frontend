@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Typography, Form, Upload, Button, message, Row, Col, Descriptions, Avatar } from 'antd';
+import { Card, Typography, Form, Upload, Button, message, Row, Col, Descriptions, Avatar, Input } from 'antd';
 import { UploadOutlined, UserOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useAuth } from '../AuthContext';
@@ -18,12 +18,16 @@ interface UserProfile {
 
 const Profile: React.FC = () => {
   const { role, userId } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(true);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [form] = Form.useForm();
-  const [signatureFile, setSignatureFile] = useState<UploadFile | null>(null);
-  const [stampFile, setStampFile] = useState<UploadFile | null>(null);
+  const [signatureLoading, setSignatureLoading] = useState(false);
+const [templateLoading, setTemplateLoading] = useState(false);
+const [profileLoading, setProfileLoading] = useState(true);
+const [profile, setProfile] = useState<UserProfile | null>(null);
+const [form] = Form.useForm();
+const [templateForm] = Form.useForm(); // Separate form for template
+const [signatureFile, setSignatureFile] = useState<UploadFile | null>(null);
+const [stampFile, setStampFile] = useState<UploadFile | null>(null);
+const [templateFile, setTemplateFile] = useState<UploadFile | null>(null);
+const [templateName, setTemplateName] = useState<string>('');
 
   //reload on page mount
    useEffect(() => {
@@ -99,6 +103,17 @@ useEffect(() => {
     }
   };
 
+  // Handle file changes for template
+  const handleTemplateChange: UploadProps['onChange'] = ({ file }) => {
+    if (file.status === 'done' || file.status === 'uploading') {
+      setTemplateFile(file);
+    } else if (file.status === 'error') {
+      console.error('Template upload error:', file.error);
+      message.error('Failed to process template file.');
+    }
+  };
+
+
   // Handle form submission
   const handleUpload = async () => {
     if (!signatureFile || !stampFile) {
@@ -132,7 +147,7 @@ useEffect(() => {
       return;
     }
 
-    setLoading(true);
+    setSignatureLoading(true);
     try {
       const response = await axios.post(
         'http://localhost:3000/users/upload-signage',
@@ -153,9 +168,68 @@ useEffect(() => {
         error.response?.data?.message || error.message || 'Failed to upload files. Please try again.';
       message.error(errorMessage);
     } finally {
-      setLoading(false);
+      setSignatureLoading(false);
     }
   };
+
+  // Add this function to handle template upload, after handleUpload
+const handleTemplateUpload = async () => {
+  if (!templateFile) {
+    message.error('Please upload a template file.');
+    return;
+  }
+
+  if (!templateFile.originFileObj) {
+    message.error('Invalid file selection. Please re-upload the template.');
+    return;
+  }
+
+  if (!(templateFile.originFileObj instanceof File)) {
+    message.error('Invalid file format. Please upload a valid PDF or Word file.');
+    return;
+  }
+
+  const formData = new FormData();
+  try {
+    formData.append('template', templateFile.originFileObj);
+    formData.append('name', templateName || 'Job Confirmation Letter Template');
+  } catch (error) {
+    console.error('Error creating FormData for template:', error);
+    message.error('Failed to prepare template for upload.');
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    message.error('Please log in to upload the template.');
+    return;
+  }
+
+  setTemplateLoading(true);
+  try {
+    const response = await axios.post(
+      'http://localhost:3000/documents/upload-template',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    message.success(response.data.message || 'Template uploaded successfully.');
+    templateForm.resetFields(['template', 'templateName']);
+    setTemplateFile(null);
+    setTemplateName('');
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || error.message || 'Failed to upload template. Please try again.';
+    message.error(errorMessage);
+  } finally {
+    setTemplateLoading(false);
+  }
+};
+
 
   // Custom upload props
   const uploadProps: UploadProps = {
@@ -179,26 +253,50 @@ useEffect(() => {
     },
   };
 
+  const templateUploadProps: UploadProps = {
+  accept: 'application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  beforeUpload: (file: File): boolean => {
+    const isValidType = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ].includes(file.type);
+    const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
+    if (!isValidType) {
+      message.error('Only PDF or Word files are allowed!');
+      return false;
+    }
+    if (!isValidSize) {
+      message.error('File must be smaller than 5MB!');
+      return false;
+    }
+    return true;
+  },
+  maxCount: 1,
+  customRequest: ({ onSuccess }) => {
+    onSuccess?.('ok');
+  },
+};
+
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <Row justify="center" gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <Card
-          className="rounded-lg shadow-md bg-white border-none"
-            bodyStyle={{ padding: '32px' }}
-            title={
-              <div className="flex items-center gap-3 py-2">
+  <div className="min-h-screen p-4 sm:p-6 lg:p-8">
+    <Row justify="center" gutter={[16, 16]}>
+      <Col xs={24} lg={16}>
+        <Card
+          className="rounded-lg shadow-md bg-white bg-cover bg-center bg-no-repeat bg-opacity-10 border-none"
+          bodyStyle={{ padding: '32px', minHeight: '220px' }} // Consistent padding and min height
+          title={
+            <div className="flex items-center gap-3 py-2">
               <Avatar size={48} icon={<UserOutlined />} className="bg-[#1890FF]" />
               <Title level={3} className="text-[#1F1F1F] m-0">
                 User Profile
               </Title>
             </div>
-            }
-          >
-            {profileLoading ? (
+          }
+        >
+          {profileLoading ? (
             <Text>Loading profile...</Text>
           ) : profile && Object.keys(profile).length > 0 ? (
-             <Descriptions
+            <Descriptions
               column={{ xs: 1, sm: 2 }}
               layout="vertical"
               labelStyle={{ fontWeight: 500, color: '#595959' }}
@@ -217,13 +315,14 @@ useEffect(() => {
           ) : (
             <Text>Oops! We couldn’t load your profile. Please refresh the page.</Text>
           )}
-          </Card>
-        </Col>
-        {role === 'ADMIN' && (
+        </Card>
+      </Col>
+      {role === 'ADMIN' && (
+        <>
           <Col xs={24} lg={16}>
             <Card
-              className="rounded-lg shadow-lg bg-white bg-[url('/background-pattern.svg')] bg-cover bg-center bg-no-repeat bg-opacity-10"
-              bodyStyle={{ padding: '24px' }}
+              className="rounded-lg shadow-md bg-white bg-cover bg-center bg-no-repeat bg-opacity-10 border-none"
+              bodyStyle={{ padding: '32px', minHeight: '250px' }} // Consistent padding and min height
               title={
                 <Title level={4} className="text-[#3C3939]">
                   Upload Signature & Stamp
@@ -294,7 +393,7 @@ useEffect(() => {
                   <Button
                     type="primary"
                     htmlType="submit"
-                    loading={loading}
+                    loading={signatureLoading}
                     className="!bg-[#775237] hover:!bg-[#754726] border-none"
                   >
                     Submit
@@ -303,10 +402,77 @@ useEffect(() => {
               </Form>
             </Card>
           </Col>
-        )}
-      </Row>
-    </div>
-  );
+          <Col xs={24} lg={16}>
+            <Card
+              className="rounded-lg shadow-md bg-white bg-cover bg-center bg-no-repeat bg-opacity-10 border-none"
+              bodyStyle={{ padding: '32px', minHeight: '250px' }} // Consistent padding and min height
+              title={
+                <Title level={4} className="text-[#3C3939]">
+                  Upload Letter Template
+                </Title>
+              }
+            >
+              <Form
+                form={templateForm}
+                layout="vertical"
+                onFinish={handleTemplateUpload}
+                className="space-y-4"
+              >
+                <Form.Item
+                  name="templateName"
+                  label={<Text strong>Template Name (Optional)</Text>}
+                >
+                  <Input
+                    placeholder="Enter template name"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="template"
+                  label={
+                    <>
+                      <Text strong>Template File (PDF/Word, Max 5MB)</Text>
+                      <Text type="secondary" className="block">
+                        File should be a PDF or Word document
+                      </Text>
+                    </>
+                  }
+                  rules={[{ required: true, message: 'Please upload a template file!' }]}
+                >
+                  <Upload
+                    {...templateUploadProps}
+                    listType="text"
+                    name="template"
+                    onChange={handleTemplateChange}
+                    fileList={templateFile ? [templateFile] : []}
+                  >
+                    <Button
+                      className="!bg-[#696867] hover:!bg-[#4e4e4d] text-white border-none"
+                      icon={<UploadOutlined />}
+                    >
+                      Upload Template
+                    </Button>
+                  </Upload>
+                </Form.Item>
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={templateLoading}
+                    className="!bg-[#775237] hover:!bg-[#754726] border-none"
+                  >
+                    Submit Template
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Card>
+          </Col>
+        </>
+      )}
+    </Row>
+  </div>
+);
 };
 
 export default Profile;
