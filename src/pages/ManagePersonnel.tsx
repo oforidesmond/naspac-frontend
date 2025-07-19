@@ -297,12 +297,14 @@ const Endorsement: React.FC = () => {
       dataIndex: 'fullName',
       key: 'fullName',
       width: 120,
+      ellipsis: true,
     },
     {
       title: 'NSS No.',
       dataIndex: 'nssNumber',
       key: 'nssNumber',
       width: 100,
+      ellipsis: true,
     },
     {
       title: 'Gender',
@@ -315,12 +317,14 @@ const Endorsement: React.FC = () => {
       dataIndex: 'phoneNumber',
       key: 'phoneNumber',
       width: 110,
+      ellipsis: true,
     },
     {
       title: 'Division',
       dataIndex: 'divisionPostedTo',
       key: 'divisionPostedTo',
       width: 130,
+      ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
           <span>{truncateText(text)}</span>
@@ -332,6 +336,7 @@ const Endorsement: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       width: 80,
+      ellipsis: true,
       render: (status: string) => (
         <span className={`status-${status.toLowerCase()}`}>
           {status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()}
@@ -342,6 +347,7 @@ const Endorsement: React.FC = () => {
       title: 'Verif. Forms',
       key: 'verificationFormUrl',
       width: 110,
+      ellipsis: true,
       render: (_: any, record: Submission) =>
         record.verificationFormUrl ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -362,6 +368,7 @@ const Endorsement: React.FC = () => {
       title: 'Appt. Letter',
       key: 'appointmentLetterUrl',
       width: 110,
+      ellipsis: true,
       render: (_: any, record: Submission) =>
         record.appointmentLetterUrl ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -437,7 +444,7 @@ const Endorsement: React.FC = () => {
           loading={loading}
           className="rounded-md"
           scroll={{ x: 'max-content' }}
-          size="small"
+          size="large"
           pagination={{ pageSize: 10 }}
           onRow={(record) => ({
             onClick: (event) => {

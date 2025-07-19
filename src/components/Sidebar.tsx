@@ -147,7 +147,7 @@ const Sidebar: React.FC = () => {
     if (role === 'ADMIN') {
       return [
         { key: '1', icon: <DashboardOutlined className="sidebar-icon" />, label: 'Dashboard' },
-        { key: '2', icon: <UserOutlined className="sidebar-icon" />, label: 'Onboard Personnel' },
+        { key: '2', icon: <UserOutlined className="sidebar-icon" />, label: 'Onboard Personnel', disabled: false },
         {
           key: '3',
           icon: <img src="/select-personnel.svg" alt="Personnel Selection" className="sidebar-icon" />,
@@ -197,8 +197,12 @@ const Sidebar: React.FC = () => {
     }
     // Personnel menu
     return [
-      { key: '1', icon: <DashboardOutlined className="sidebar-icon" />, label: 'Dashboard' },
-      // { key: '2', icon: <UserOutlined className="sidebar-icon" />, label: 'My Details' },
+      {
+        key: '1',
+        icon: <DashboardOutlined className="sidebar-icon" />,
+        label: 'Dashboard',
+        disabled: statusLoading || !statusData?.submissionStatus,
+      },
       {
         key: '3',
         icon: <PrinterOutlined className="sidebar-icon" />,

@@ -25,7 +25,7 @@ interface ReportCounts {
   totalNonPersonnel: number;
   totalDepartments: number;
   statusCounts: {
-    pending: number;
+    // pending: number;
     pendingEndorsement: number;
     endorsed: number;
     validated: number;
@@ -35,6 +35,7 @@ interface ReportCounts {
   acceptedCount: number;
   personnelByDepartment: Department[];
   onboardedStudentCount: number;
+  pendingCount: number;
 }
 
 const Home: React.FC = () => {
@@ -135,7 +136,7 @@ const Home: React.FC = () => {
             route: '/staff-management',
           },
           {
-            title: 'Endorsed',
+            title: 'Endorse',
             value: reportData?.statusCounts.pendingEndorsement || 0,
             icon: '/admin-hero-3.svg',
             gradient: 'bg-gradient-to-r from-[#CC6F22] to-[#940000]',
@@ -260,7 +261,7 @@ const Home: React.FC = () => {
               {[
                 {
                   title: 'Pending Selection',
-                  value: reportData?.statusCounts.pending || 0,
+                  value: reportData?.pendingCount || 0,
                 },
                 {
                   title: 'Total Selections',

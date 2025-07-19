@@ -156,6 +156,7 @@ const DepartmentPlacements: React.FC = () => {
         setCreateModalVisible(false);
         form.resetFields();
         toast.success('Department created successfully');
+        window.location.reload();
       } else {
         toast.error(data.message || 'Failed to create department');
       }
@@ -182,24 +183,28 @@ const DepartmentPlacements: React.FC = () => {
       dataIndex: 'name',
       key: 'name',
       width: 180,
+      ellipsis: true,
     },
     {
       title: 'NSS No.',
       dataIndex: 'nssNumber',
       key: 'nssNumber',
       width: 150,
+      ellipsis: true,
     },
     {
       title: 'Department',
       dataIndex: ['department', 'name'],
       key: 'department',
       width: 200,
+      ellipsis: true,
       render: (name: string | undefined) => name || 'Unassigned',
     },
     {
       title: 'Program Studied',
       key: 'programStudied',
       width: 180,
+      ellipsis: true,
       render: (record: Personnel) => record.submissions[0]?.programStudied || 'N/A',
     },
     {
@@ -207,12 +212,14 @@ const DepartmentPlacements: React.FC = () => {
       dataIndex: ['department', 'supervisor', 'name'], // Updated to use department's supervisor
       key: 'supervisor',
       width: 200,
+      ellipsis: true,
       render: (name: string | undefined) => name || 'Unassigned',
     },
     {
       title: 'Status',
       key: 'status',
       width: 150,
+      ellipsis: true,
       render: (record: Personnel) => (
         <span className={`status-${record.submissions[0]?.status.toLowerCase()}`}>
           {record.submissions[0]?.status.charAt(0).toUpperCase() + record.submissions[0]?.status.slice(1).toLowerCase()}
@@ -257,7 +264,7 @@ const DepartmentPlacements: React.FC = () => {
           loading={loading}
           className="rounded-md"
           scroll={{ x: 'max-content' }}
-          size="small"
+          size="large"
           pagination={{ pageSize: 10 }}
         />
         <Modal

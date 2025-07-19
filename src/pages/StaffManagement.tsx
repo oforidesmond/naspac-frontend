@@ -115,18 +115,21 @@ const StaffManagement: React.FC = () => {
       dataIndex: 'name',
       key: 'name',
       width: 120,
+      ellipsis: true,
     },
     {
       title: 'Staff ID',
       dataIndex: 'staffId',
       key: 'staffId',
       width: 100,
+      ellipsis: true,
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
       width: 160,
+      ellipsis: true,
     },
     {
       title: 'Role',
@@ -139,11 +142,12 @@ const StaffManagement: React.FC = () => {
         </span>
       ),
     },
-        {
+      {
       title: 'Department',
       dataIndex: 'departmentsSupervised',
       key: 'department',
       width: 160,
+      ellipsis: true,
       render: (departments: Department[]) =>
         departments.length > 0
           ? departments.map((dept) => dept.name).join(', ')
@@ -185,7 +189,7 @@ const StaffManagement: React.FC = () => {
           loading={loading}
           className="rounded-md"
           scroll={{ x: 'max-content' }}
-          size="small"
+          size="large"
           pagination={{ pageSize: 10 }}
         />
         <Modal
