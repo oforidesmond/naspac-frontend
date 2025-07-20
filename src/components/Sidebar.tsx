@@ -4,7 +4,6 @@ import {
   DashboardOutlined,
   UserOutlined,
   PrinterOutlined,
-  BellOutlined,
   LogoutOutlined,
   MenuOutlined,
 } from '@ant-design/icons';
@@ -237,7 +236,7 @@ const Sidebar: React.FC = () => {
   // Settings menu (same for all roles)
   const settingsItems = [
     { key: '6', icon: <UserOutlined className="sidebar-icon" />, label: 'Profile' },
-    { key: '7', icon: <BellOutlined className="sidebar-icon" />, label: 'Notices' },
+    // { key: '7', icon: <BellOutlined className="sidebar-icon" />, label: 'Notices' },
   ];
 
   const toggleCollapse = () => {

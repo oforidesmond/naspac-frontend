@@ -1,88 +1,26 @@
-import React from 'react';
-import { BellFilled, UserOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { BellFilled, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Badge, Dropdown, Menu, Avatar, Typography } from 'antd';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Notifications from './Notifications';
 
 const { Text } = Typography;
 
 const Header: React.FC = () => {
   const { name, email, role, logout, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [badgeCount, setBadgeCount] = useState(0);
 
   // Handle logout action
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login'); // Redirect to login page after logout
+      navigate('/login');
     } catch (error) {
       // Error is handled in useAuth.logout with toast
     }
   };
-
-  // Notification Dropdown Content
-  const notificationMenu = (
-    <div className="w-80 bg-white shadow-lg rounded-lg p-4 max-h-96 overflow-y-auto">
-      <div className="flex justify-between items-center mb-3">
-        <Text strong>Notifications</Text>
-        <Text type="secondary" className="text-xs cursor-pointer hover:text-blue-500">
-          Mark all as read
-        </Text>
-      </div>
-      <div className="space-y-3">
-        {/* Notification Item 1 */}
-        <div className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-md">
-          <Avatar
-            size={32}
-            style={{ backgroundColor: '#e6f7ff' }}
-            icon={<BellFilled style={{ color: '#1890ff' }} />}
-          />
-          <div>
-            <Text className="text-sm">New Submission Received</Text>
-            <Text type="secondary" className="text-xs block">
-              A new onboarding submission from Jane Smith is pending review.
-            </Text>
-            <Text type="secondary" className="text-xs">5 minutes ago</Text>
-          </div>
-        </div>
-        {/* Notification Item 2 */}
-        <div className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-md">
-          <Avatar
-            size={32}
-            style={{ backgroundColor: '#fff1f0' }}
-            icon={<UserOutlined style={{ color: '#f5222d' }} />}
-          />
-          <div>
-            <Text className="text-sm">Profile Update Required</Text>
-            <Text type="secondary" className="text-xs block">
-              Please update your NSS number in your profile.
-            </Text>
-            <Text type="secondary" className="text-xs">1 hour ago</Text>
-          </div>
-        </div>
-        {/* Notification Item 3 */}
-        <div className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-md">
-          <Avatar
-            size={32}
-            style={{ backgroundColor: '#f6ffed' }}
-            icon={<SettingOutlined style={{ color: '#52c41a' }} />}
-          />
-          <div>
-            <Text className="text-sm">System Maintenance</Text>
-            <Text type="secondary" className="text-xs block">
-              Scheduled maintenance on June 26, 2025, from 2 AM to 4 AM.
-            </Text>
-            <Text type="secondary" className="text-xs">Yesterday</Text>
-          </div>
-        </div>
-      </div>
-      <div className="mt-3 text-center">
-        <Text type="secondary" className="text-xs cursor-pointer hover:text-blue-500">
-          View all notifications
-        </Text>
-      </div>
-    </div>
-  );
 
   // Profile Dropdown Content
   const profileMenu = (
@@ -130,10 +68,15 @@ const Header: React.FC = () => {
           </Dropdown>
 
           {/* Notification Bell with Badge */}
-          <Dropdown overlay={notificationMenu} trigger={['click']} placement="bottomRight">
+         <Dropdown
+            overlay={<Notifications displayMode="dropdown" maxDisplay={5} onNotificationsViewed={() => setBadgeCount(0)} onNotificationsFetched={setBadgeCount} />}
+            trigger={['click']}
+            placement="bottomRight"
+            onOpenChange={(open) => open && setBadgeCount(0)} // Clear badge count when dropdown opens
+          >
             <div className="cursor-pointer hover:bg-gray-100 p-1 rounded">
               <Badge
-                count={5}
+                count={badgeCount}
                 offset={[0, 0]}
                 className="flex items-center"
                 style={{

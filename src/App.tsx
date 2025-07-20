@@ -17,6 +17,9 @@ import StaffManagement from './pages/StaffManagement';
 import DepartmentPlacements from './pages/DeptPlacements';
 import ManagePersonnel from './pages/ManagePersonnel';
 import { Spin } from 'antd';
+import NotificationsPage from './pages/NotificationsPage';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const centeredSpinStyle: React.CSSProperties = {
   display: 'flex',
@@ -44,6 +47,15 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const MainLayout: React.FC = () => {
   return (
    <div className="flex min-h-screen">
+    <ToastContainer  position="top-right"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover/>
       {/* Sidebar (visible on all screens) */}
       <Sidebar />
       {/* Main content area */}
@@ -125,6 +137,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+             <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <NotificationsPage />
                 </ProtectedRoute>
               }
             />

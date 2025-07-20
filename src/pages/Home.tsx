@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Avatar, Typography, message, Select, Spin, Progress, Alert } from 'antd';
-import { BellFilled, UserOutlined, SettingOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Card, Typography, message, Select, Spin, Progress, Alert } from 'antd';
+import { ClockCircleOutlined } from '@ant-design/icons';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Notifications from '../components/Notifications';
+// import Notifications from '../components/Notifications';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -293,65 +295,7 @@ const Home: React.FC = () => {
         </section>
 
       {/* Section 3: Recent Activity with Notifications */}
-      <section>
-        <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-[#3C3939] mb-4">
-          Recent Activity
-        </h3>
-        <Card
-          className="rounded-lg shadow-lg bg-white bg-[url('/background-pattern.svg')] bg-cover bg-center bg-no-repeat bg-opacity-10"
-          bodyStyle={{ padding: '24px' }}
-        >
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-md transition">
-              <Avatar
-                size={40}
-                style={{ backgroundColor: '#e6f7ff' }}
-                icon={<BellFilled style={{ color: '#1890ff' }} />}
-              />
-              <div className="flex-1">
-                <Text strong className="text-base">New Submission Received</Text>
-                <Text type="secondary" className="text-sm block">
-                  A new onboarding submission from Jane Smith is pending review.
-                </Text>
-                <Text type="secondary" className="text-xs">5 minutes ago</Text>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-md transition">
-              <Avatar
-                size={40}
-                style={{ backgroundColor: '#fff1f0' }}
-                icon={<UserOutlined style={{ color: '#f5222d' }} />}
-              />
-              <div className="flex-1">
-                <Text strong className="text-base">Profile Update Required</Text>
-                <Text type="secondary" className="text-sm block">
-                  Please update your NSS number in your profile.
-                </Text>
-                <Text type="secondary" className="text-xs">1 hour ago</Text>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-md transition">
-              <Avatar
-                size={40}
-                style={{ backgroundColor: '#f6ffed' }}
-                icon={<SettingOutlined style={{ color: '#52c41a' }} />}
-              />
-              <div className="flex-1">
-                <Text strong className="text-base">System Maintenance</Text>
-                <Text type="secondary" className="text-sm block">
-                  Scheduled maintenance on June 26, 2025, from 2 AM to 4 AM.
-                </Text>
-                <Text type="secondary" className="text-xs">Yesterday</Text>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 text-center">
-            <Text type="secondary" className="text-sm cursor-pointer hover:text-blue-500">
-              View all notifications
-            </Text>
-          </div>
-        </Card>
-      </section>
+      <Notifications displayMode="full" maxDisplay={3} />
         </>
       );
     }
@@ -468,65 +412,7 @@ const Home: React.FC = () => {
       </section>
 
         {/* Section 3: Notifications */}
-        <section>
-          <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-[#3C3939] mb-4">
-            Notifications
-          </h3>
-          <Card
-            className="rounded-lg shadow-lg bg-white bg-[url('/background-pattern.svg')] bg-cover bg-center bg-no-repeat bg-opacity-10"
-            bodyStyle={{ padding: '24px' }}
-          >
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-md transition">
-                <Avatar
-                  size={40}
-                  style={{ backgroundColor: '#e6f7ff' }}
-                  icon={<BellFilled style={{ color: '#1890ff' }} />}
-                />
-                <div className="flex-1">
-                  <Text strong className="text-base">New Submission Received</Text>
-                  <Text type="secondary" className="text-sm block">
-                    A new onboarding submission from Jane Smith is pending review.
-                  </Text>
-                  <Text type="secondary" className="text-xs">5 minutes ago</Text>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-md transition">
-                <Avatar
-                  size={40}
-                  style={{ backgroundColor: '#fff1f0' }}
-                  icon={<UserOutlined style={{ color: '#f5222d' }} />}
-                />
-                <div className="flex-1">
-                  <Text strong className="text-base">Profile Update Required</Text>
-                  <Text type="secondary" className="text-sm block">
-                    Please update your NSS number in your profile.
-                  </Text>
-                  <Text type="secondary" className="text-xs">1 hour ago</Text>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-md transition">
-                <Avatar
-                  size={40}
-                  style={{ backgroundColor: '#f6ffed' }}
-                  icon={<SettingOutlined style={{ color: '#52c41a' }} />}
-                />
-                <div className="flex-1">
-                  <Text strong className="text-base">System Maintenance</Text>
-                  <Text type="secondary" className="text-sm block">
-                    Scheduled maintenance on June 26, 2025, from 2 AM to 4 AM.
-                  </Text>
-                  <Text type="secondary" className="text-xs">Yesterday</Text>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 text-center">
-              <Text type="secondary" className="text-sm cursor-pointer hover:text-blue-500">
-                View all notifications
-              </Text>
-            </div>
-          </Card>
-        </section>
+        <Notifications displayMode="full" maxDisplay={3} />
       </>
     );
   };
