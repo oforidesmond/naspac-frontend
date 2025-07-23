@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Select, Button, Typography, Modal, Form, Input, Space } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import { useAuth } from '../AuthContext';
 import '../components/PersonnelSelection.css';
@@ -29,7 +29,11 @@ const StaffManagement: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<string>('All');
   const [loading, setLoading] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
 
   // Fetch all staff
   useEffect(() => {
@@ -83,7 +87,7 @@ const StaffManagement: React.FC = () => {
       });
       const data = await response.json();
       if (response.ok) {
-       setStaffList((prev) => [...prev, { ...data, departmentsSupervised: [] }]);
+        setStaffList((prev) => [...prev, { ...data, departmentsSupervised: [] }]);
         setFilteredStaffList((prev) => [...prev, { ...data, departmentsSupervised: [] }]);
         setCreateModalVisible(false);
         form.resetFields();
@@ -94,6 +98,74 @@ const StaffManagement: React.FC = () => {
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to create user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle update user
+  const handleUpdateUser = async (values: { staffId: string; name: string; email: string; role: string }) => {
+    if (!selectedStaff) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/users/staff/${selectedStaff.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(values),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setStaffList((prev) =>
+          prev.map((staff) =>
+            staff.id === selectedStaff.id ? { ...staff, ...data } : staff
+          )
+        );
+        setFilteredStaffList((prev) =>
+          prev.map((staff) =>
+            staff.id === selectedStaff.id ? { ...staff, ...data } : staff
+          )
+        );
+        setEditModalVisible(false);
+        editForm.resetFields();
+        toast.success('User updated successfully');
+      } else {
+        toast.error(data.message || 'Failed to update user');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle delete user
+  const handleDeleteUser = async () => {
+    if (!selectedStaff) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/users/staff/${selectedStaff.id}/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (response.ok) {
+        setStaffList((prev) => prev.filter((staff) => staff.id !== selectedStaff.id));
+        setFilteredStaffList((prev) => prev.filter((staff) => staff.id !== selectedStaff.id));
+        setEditModalVisible(false);
+        toast.success('User deleted successfully');
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Failed to delete user');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete user');
     } finally {
       setLoading(false);
     }
@@ -142,7 +214,7 @@ const StaffManagement: React.FC = () => {
         </span>
       ),
     },
-      {
+    {
       title: 'Department',
       dataIndex: 'departmentsSupervised',
       key: 'department',
@@ -152,6 +224,28 @@ const StaffManagement: React.FC = () => {
         departments.length > 0
           ? departments.map((dept) => dept.name).join(', ')
           : '',
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: 50,
+      ellipsis: true,
+      render: (_: any, record: Staff) => (
+        <Button
+          type="link"
+          icon={<EditOutlined className='!text-[#5B3418]' />}
+          onClick={() => {
+            setSelectedStaff(record);
+            setEditModalVisible(true);
+            editForm.setFieldsValue({
+              name: record.name,
+              staffId: record.staffId,
+              email: record.email,
+              role: record.role,
+            });
+          }}
+        ></Button>
+      ),
     },
   ];
 
@@ -192,6 +286,7 @@ const StaffManagement: React.FC = () => {
           size="large"
           pagination={{ pageSize: 10 }}
         />
+        {/* Create User Modal */}
         <Modal
           title="Create New User"
           open={createModalVisible}
@@ -266,6 +361,107 @@ const StaffManagement: React.FC = () => {
             </Form.Item>
           </Form>
         </Modal>
+        {/* Edit User Modal */}
+        <Modal
+        title="Edit User"
+        open={editModalVisible}
+        onCancel={() => {
+          setEditModalVisible(false);
+          setSelectedStaff(null);
+          editForm.resetFields();
+        }}
+        footer={null}
+        className="centered-modal"
+      >
+        <Form
+          form={editForm}
+          onFinish={handleUpdateUser}
+          layout="vertical"
+          className="mt-4"
+        >
+          <Form.Item
+            name="name"
+            label="Full Name"
+            rules={[{ required: true, message: 'Please enter full name' }]}
+          >
+            <Input placeholder="Enter full name" />
+          </Form.Item>
+          <Form.Item
+            name="staffId"
+            label="Staff ID"
+            rules={[{ required: true, message: 'Please enter staff ID' }]}
+          >
+            <Input placeholder="Enter staff ID" />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: 'Please enter email' },
+              { type: 'email', message: 'Please enter a valid email' },
+            ]}
+          >
+            <Input placeholder="Enter email" />
+          </Form.Item>
+          <Form.Item
+            name="role"
+            label="Role"
+            rules={[{ required: true, message: 'Please select a role' }]}
+          >
+            <Select placeholder="Select role">
+              <Option value="ADMIN">Admin</Option>
+              <Option value="STAFF">Staff</Option>
+              <Option value="SUPERVISOR">Supervisor</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <div className="flex justify-between">
+              <Space>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  className="!bg-[#5B3418] hover:!bg-[#4a2c1c] !border-0"
+                >
+                  Update
+                </Button>
+                <Button
+                  className="!bg-[#999696] !border-0"
+                  onClick={() => {
+                    setEditModalVisible(false);
+                    setSelectedStaff(null);
+                    editForm.resetFields();
+                  }}
+                >
+                  Cancel
+                </Button>
+              </Space>
+              <Button
+              className='!bg-[#b95a5a] !border-0'
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => setConfirmDeleteVisible(true)}
+                loading={loading}
+              >
+                Delete
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+      {/* Delete Confirmation Modal */}
+      <Modal
+        title="Confirm Delete"
+        open={confirmDeleteVisible}
+        onOk={handleDeleteUser}
+        onCancel={() => setConfirmDeleteVisible(false)}
+        okText="Delete"
+        okButtonProps={{ danger: true, className: '!bg-[#b95a5a]', loading: loading }}
+        cancelButtonProps={{ disabled: loading, className: '!bg-[#999696]' }}
+        className="centered-modal"
+      >
+        <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+      </Modal>
       </div>
     </div>
   );

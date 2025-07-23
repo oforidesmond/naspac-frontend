@@ -87,6 +87,11 @@
   font-weight: bold;
 }
 
+.status-pending-endorsement {
+  color: #5c5952; 
+  font-weight: bold;
+}
+
 .status-endorsed {
   color: #5B3418;
   font-weight: bold ;

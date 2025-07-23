@@ -69,7 +69,7 @@ const Header: React.FC = () => {
 
           {/* Notification Bell with Badge */}
          <Dropdown
-            overlay={<Notifications displayMode="dropdown" maxDisplay={5} onNotificationsViewed={() => setBadgeCount(0)} onNotificationsFetched={setBadgeCount} />}
+            overlay={<Notifications displayMode="dropdown" maxDisplay={5} onNotificationsViewed={() => setBadgeCount(0)} onNotificationsFetched={(count) => setBadgeCount(Math.min(count, 5))} />}
             trigger={['click']}
             placement="bottomRight"
             onOpenChange={(open) => open && setBadgeCount(0)} // Clear badge count when dropdown opens

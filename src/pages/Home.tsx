@@ -295,7 +295,7 @@ const Home: React.FC = () => {
         </section>
 
       {/* Section 3: Recent Activity with Notifications */}
-      <Notifications displayMode="full" maxDisplay={3} />
+      <Notifications displayMode="homepage" maxDisplay={3} />
         </>
       );
     }
@@ -313,7 +313,7 @@ const Home: React.FC = () => {
               <p className="text-sm sm:text-base">
               {isLoading ? (
                 'Loading status...'
-              ) : statusData?.submissionStatus === 'VALIDATED' ? (
+              ) : statusData?.submissionStatus === 'VALIDATED' || statusData?.submissionStatus === 'COMPLETED' ? (
                 'Your verification is complete! Enjoy your National Service and make the most of this exciting journey.'
               ) : (
                 'Your service period has not yet started. Here is your dashboard overview.'

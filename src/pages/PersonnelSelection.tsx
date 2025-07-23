@@ -521,45 +521,45 @@ useEffect(() => {
           )}
         </Modal>
        <Modal
-  title="Confirm Shortlist"
-  open={shortlistModalVisible}
-  onOk={handleShortlistConfirm}
-  onCancel={() => {
-    setShortlistModalVisible(false);
-    setSelectedDepartment(null);
-  }}
-  okText="Confirm"
-  cancelText="Cancel"
-  okButtonProps={{ 
-    className: '!bg-[#5B3418] !text-white !border-0', 
-    disabled: !selectedDepartment 
-  }}
-  cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
->
-  <div className="flex flex-col gap-4">
-    <p>Are you sure you want to shortlist {selectedRows.length} personnel?</p>
-    <div className="flex justify-between items-center">
-      <div className="w-1/3">
-        <Select
-          showSearch
-          placeholder="Select a department"
-          value={selectedDepartment}
-          onChange={(value) => setSelectedDepartment(value)}
-          filterOption={(input, option) =>
-            (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-          }
-          className="w-full"
-        >
-          {departments.map((dept) => (
-            <Option key={dept.id} value={dept.id}>
-              {dept.name}
-            </Option>
-          ))}
-        </Select>
-      </div>
-    </div>
-  </div>
-</Modal>
+        title="Confirm Shortlist"
+        open={shortlistModalVisible}
+        onOk={handleShortlistConfirm}
+        onCancel={() => {
+          setShortlistModalVisible(false);
+          setSelectedDepartment(null);
+        }}
+        okText="Confirm"
+        cancelText="Cancel"
+        okButtonProps={{ 
+          className: '!bg-[#5B3418] !text-white !border-0', 
+          disabled: !selectedDepartment 
+        }}
+        cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
+      >
+        <div className="flex flex-col gap-4">
+          <p>Are you sure you want to shortlist {selectedRows.length} personnel?</p>
+          <div className="flex justify-between items-center">
+            <div className="w-1/3">
+              <Select
+                showSearch
+                placeholder="Select a department"
+                value={selectedDepartment}
+                onChange={(value) => setSelectedDepartment(value)}
+                filterOption={(input, option) =>
+                  (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                }
+                className="w-full"
+              >
+                {departments.map((dept) => (
+                  <Option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          </div>
+        </div>
+      </Modal>
       </div>
     </div>
   );
