@@ -1,4 +1,3 @@
-// src/components/ui/CardContent.tsx
 import React from "react";
 
 interface CardContentProps {

@@ -16,7 +16,6 @@ const PersonnelLogin: React.FC = () => {
   const { setRole } = useAuth();
   const navigate = useNavigate();
 
-  // Define carousel images
   const images: string[] = ["/carousel-image-1.jpg", "/carousel-image-2.jpg", "/carousel-image-3.jpg", "/carousel-image-4.png", "/carousel-image-5.jpg", "/carousel-image-6.jpg", "/carousel-image-7.jpg"];
 
   const togglePasswordVisibility = () => {
@@ -43,14 +42,13 @@ const PersonnelLogin: React.FC = () => {
         position: 'top-right',
         autoClose: 3000,
       });
-      return null; // Return null to indicate failure
+      return null;
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
     if (!nssNumber.trim() || !password.trim()) {
       toast.error('Please enter both NSS number and Password', {
         position: 'top-right',
@@ -75,10 +73,8 @@ const PersonnelLogin: React.FC = () => {
         localStorage.setItem('token', data.accessToken);
         setRole('PERSONNEL');
 
-        // Check onboarding status
         const hasSubmitted = await checkOnboardingStatus(data.accessToken);
         if (hasSubmitted === null) {
-          // Status check failed, do not proceed with redirection
           return;
         }
 
@@ -87,11 +83,10 @@ const PersonnelLogin: React.FC = () => {
           autoClose: 2000,
         });
 
-        // Redirect based on onboarding status
         if (hasSubmitted) {
-          navigate('/'); // Redirect to homepage if submitted
+          navigate('/');
         } else {
-          navigate('/onboarding-form'); // Redirect to onboarding form if not submitted
+          navigate('/onboarding-form');
         }
       } else {
         toast.error(data.message || 'Invalid credentials. Please try again.', {
@@ -109,7 +104,6 @@ const PersonnelLogin: React.FC = () => {
     }
   };
 
-  // Handle click on camouflaged button
   const handleStaffLoginRedirect = () => {
     navigate('/staff-login');
   };

@@ -18,7 +18,6 @@ const Header: React.FC = () => {
       await logout();
       navigate('/login');
     } catch (error) {
-      // Error is handled in useAuth.logout with toast
     }
   };
 

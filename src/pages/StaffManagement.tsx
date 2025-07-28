@@ -35,7 +35,6 @@ const StaffManagement: React.FC = () => {
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
 
-  // Fetch all staff
   useEffect(() => {
     const fetchStaff = async () => {
       setLoading(true);
@@ -64,7 +63,6 @@ const StaffManagement: React.FC = () => {
     }
   }, [role]);
 
-  // Filter logic
   useEffect(() => {
     let filtered = staffList;
     if (roleFilter !== 'All') {
@@ -73,7 +71,6 @@ const StaffManagement: React.FC = () => {
     setFilteredStaffList(filtered);
   }, [roleFilter, staffList]);
 
-  // Handle create user
   const handleCreateUser = async (values: { staffId: string; name: string; email: string; role: string }) => {
     setLoading(true);
     try {
@@ -103,7 +100,6 @@ const StaffManagement: React.FC = () => {
     }
   };
 
-  // Handle update user
   const handleUpdateUser = async (values: { staffId: string; name: string; email: string; role: string }) => {
     if (!selectedStaff) return;
     
@@ -142,7 +138,6 @@ const StaffManagement: React.FC = () => {
     }
   };
 
-  // Handle delete user
   const handleDeleteUser = async () => {
     if (!selectedStaff) return;
     
@@ -171,7 +166,6 @@ const StaffManagement: React.FC = () => {
     }
   };
 
-  // Restrict to ADMIN
   if (!role || role !== 'ADMIN') {
     return (
       <div className="flex items-center justify-center h-full">
@@ -180,7 +174,6 @@ const StaffManagement: React.FC = () => {
     );
   }
 
-  // Table columns
   const columns = [
     {
       title: 'Name',

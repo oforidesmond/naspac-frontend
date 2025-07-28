@@ -125,7 +125,6 @@ const DepartmentPlacements: React.FC = () => {
     }
   }, [role]);
 
-  // Filter and search logic
   useEffect(() => {
     let filtered = personnel;
     if (departmentFilter !== 'All') {
@@ -144,7 +143,6 @@ const DepartmentPlacements: React.FC = () => {
     setSelectedRows([]);
   }, [departmentFilter, searchTerm, personnel]);
 
-  // Selection handlers
   const handleSelectAll = () => {
     if (selectedRows.length === filteredPersonnel.length) {
       setSelectedRows([]);

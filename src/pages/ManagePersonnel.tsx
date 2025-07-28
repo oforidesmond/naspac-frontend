@@ -44,7 +44,6 @@ const Endorsement: React.FC = () => {
   const [shortlistModalVisible, setShortlistModalVisible] = useState(false);
   const [validatedCount, setValidatedCount] = useState<number>(0);
 
-   // Fetch validated count
   useEffect(() => {
     const fetchValidatedCount = async () => {
       try {
@@ -104,7 +103,6 @@ const Endorsement: React.FC = () => {
     fetchSubmissions();
   }, []);
 
-  // Filter and search logic
   useEffect(() => {
     let filtered = submissions;
     if (statusFilter !== 'All') {
@@ -220,7 +218,6 @@ const Endorsement: React.FC = () => {
   }
 };
 
-  // Handle bulk endorse
   const handleShortlistConfirm = async () => {
   setLoading(true);
   try {
@@ -258,7 +255,6 @@ const Endorsement: React.FC = () => {
   }
 };
 
-  // Restrict to ADMIN
   if (!role || (role !== 'ADMIN' && role !== 'STAFF')) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -267,7 +263,6 @@ const Endorsement: React.FC = () => {
     );
   }
 
-  // Truncate text helper
   const truncateText = (text: string, maxLength: number = 15) =>
     text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 

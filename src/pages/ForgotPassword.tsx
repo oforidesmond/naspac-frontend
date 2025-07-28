@@ -19,7 +19,6 @@ const ForgotPassword: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side validation
     if (!email.trim()) {
       toast.error("Please enter an email address", {
         position: "top-right",
@@ -41,7 +40,7 @@ const ForgotPassword: React.FC = () => {
 
      try {
       const response = await axios.post(
-        "http://localhost:3000/auth/request-forgot-password", // Replace with your backend URL
+        "http://localhost:3000/auth/request-forgot-password",
         { email }
       );
 

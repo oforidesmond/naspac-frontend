@@ -39,7 +39,6 @@ const [templateName, setTemplateName] = useState<string>('');
       }
     }, []);
 
-  // Fetch user profile
 useEffect(() => {
   const fetchProfile = async () => {
     if (!userId) {
@@ -172,7 +171,6 @@ useEffect(() => {
     }
   };
 
-  // Add this function to handle template upload, after handleUpload
 const handleTemplateUpload = async () => {
   if (!templateFile) {
     message.error('Please upload a template file.');
@@ -230,13 +228,11 @@ const handleTemplateUpload = async () => {
   }
 };
 
-
-  // Custom upload props
   const uploadProps: UploadProps = {
     accept: 'image/png,image/jpeg',
     beforeUpload: (file: File): boolean => {
       const isValidType = ['image/png', 'image/jpeg'].includes(file.type);
-      const isValidSize = file.size <= 2 * 1024 * 1024; // 2MB limit
+      const isValidSize = file.size <= 2 * 1024 * 1024;
       if (!isValidType) {
         message.error('Only PNG or JPEG files are allowed!');
         return false;
@@ -260,7 +256,7 @@ const handleTemplateUpload = async () => {
       'application/pdf',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ].includes(file.type);
-    const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
+    const isValidSize = file.size <= 5 * 1024 * 1024;
     if (!isValidType) {
       message.error('Only PDF or Word files are allowed!');
       return false;
@@ -283,7 +279,7 @@ const handleTemplateUpload = async () => {
       <Col xs={24} lg={16}>
         <Card
           className="rounded-lg shadow-md bg-white bg-cover bg-center bg-no-repeat bg-opacity-10 border-none"
-          bodyStyle={{ padding: '32px', minHeight: '220px' }} // Consistent padding and min height
+          bodyStyle={{ padding: '32px', minHeight: '220px' }}
           title={
             <div className="flex items-center gap-3 py-2">
               <Avatar size={48} icon={<UserOutlined />} className="bg-[#1890FF]" />
@@ -322,7 +318,7 @@ const handleTemplateUpload = async () => {
           <Col xs={24} lg={16}>
             <Card
               className="rounded-lg shadow-md bg-white bg-cover bg-center bg-no-repeat bg-opacity-10 border-none"
-              bodyStyle={{ padding: '32px', minHeight: '250px' }} // Consistent padding and min height
+              bodyStyle={{ padding: '32px', minHeight: '250px' }}
               title={
                 <Title level={4} className="text-[#3C3939]">
                   Upload Signature & Stamp
@@ -405,7 +401,7 @@ const handleTemplateUpload = async () => {
           <Col xs={24} lg={16}>
             <Card
               className="rounded-lg shadow-md bg-white bg-cover bg-center bg-no-repeat bg-opacity-10 border-none"
-              bodyStyle={{ padding: '32px', minHeight: '250px' }} // Consistent padding and min height
+              bodyStyle={{ padding: '32px', minHeight: '250px' }}
               title={
                 <Title level={4} className="text-[#3C3939]">
                   Upload Letter Template

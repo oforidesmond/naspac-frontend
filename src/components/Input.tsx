@@ -1,9 +1,8 @@
-// src/components/ui/Input.tsx
 import React from "react";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;
-  icon?: React.ReactNode; // For SVG or image icons
+  icon?: React.ReactNode;
 }
 
 const Input: React.FC<InputProps> = ({ className = "", icon, ...props }) => {

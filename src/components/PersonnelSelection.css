@@ -87,7 +87,7 @@
   font-weight: bold;
 }
 
-.status-pending-endorsement {
+.status-pending_endorsement {
   color: #5c5952; 
   font-weight: bold;
 }
@@ -98,17 +98,17 @@
 }
 
 .status-rejected {
-  color: #ff4d4f;
+  color: #722c2d;
   font-weight: bold;
 }
 
 .status-validated {
-  color: #408b1a;
+  color: #3f7524;
   font-weight: bold;
 }
 
 .status-completed {
-  color: #722ed1;
+  color: #522f83;
   font-weight: bold;
 }
 

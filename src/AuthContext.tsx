@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        // Step 1: Validate token
+        // Validate token
         const validateResponse = await fetch('http://localhost:3000/auth/validate', {
           method: 'GET',
           headers: {
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setEmail(validateData.email || null);
         setName(validateData.name || null);
 
-        // Step 2: Fetch latest profile data from /users/profile
+        // Fetch latest profile data
         const profileResponse = await fetch('http://localhost:3000/users/profile', {
           method: 'GET',
           headers: {

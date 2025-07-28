@@ -63,7 +63,7 @@ const Sidebar: React.FC = () => {
 
   // Handle upload verification form
   const handleUploadVerification = () => {
-    setUploadModalVisible(true); // Show confirmation modal
+    setUploadModalVisible(true);
   };
 
    const handleUploadConfirm = () => {
@@ -163,12 +163,12 @@ const Sidebar: React.FC = () => {
           label: 'Manage Personnel',
         },
           {
-          key: '8', // Changed from '6' to avoid conflict
+          key: '8',
           icon: <img src="/admin.svg" alt="Staff Management" className="sidebar-icon" />,
           label: 'Staff Management',
         },
         {
-          key: '9', // Changed from '7' to avoid conflict
+          key: '9',
           icon: <img src="/bank.svg" alt="Dept. Placements" className="sidebar-icon" />,
           label: 'Dept. Placements',
         },

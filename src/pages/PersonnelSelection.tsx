@@ -46,8 +46,6 @@ const PersonnelSelection: React.FC = () => {
   const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
 const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
 
-
-  // Fetch shortlisted count
   useEffect(() => {
   const fetchShortlistedCount = async () => {
     try {
@@ -76,7 +74,6 @@ const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null
   }
 }, [role]);
 
-  // Fetch submissions
   useEffect(() => {
     const fetchSubmissions = async () => {
       setLoading(true);
@@ -89,7 +86,6 @@ const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null
         });
         const data: Submission[] = await response.json();
         if (response.ok) {
-          // Filter for PENDING status only
           const pendingSubmissions = data.filter((s) => s.status === 'PENDING');
           setSubmissions(pendingSubmissions);
           setFilteredSubmissions(pendingSubmissions);
@@ -107,7 +103,6 @@ const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null
     fetchSubmissions();
   }, []);
 
-  // Filter and search logic
   useEffect(() => {
     let filtered = submissions;
     if (programFilter !== 'All courses') {
@@ -124,11 +119,9 @@ const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null
       );
     }
     setFilteredSubmissions(filtered);
-    // Reset selections when filters change
     setSelectedRows([]);
   }, [programFilter, searchTerm, submissions]);
 
-  // Selection handlers
   const handleSelectAll = () => {
     if (selectedRows.length === filteredSubmissions.length) {
       setSelectedRows([]);
@@ -143,7 +136,6 @@ const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null
     );
   };
 
-  // Export to Excel (includes all fields)
   const exportToExcel = () => {
     const exportData = (selectedRows.length > 0
       ? filteredSubmissions.filter((s) => selectedRows.includes(s.id))
@@ -181,14 +173,12 @@ const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null
     setModalVisible(true);
   };
 
-  // Handle download
   const handleDownload = () => {
     if (modalContent?.url) {
       window.open(modalContent.url, '_blank');
     }
   };
 
- // fetch departments
 useEffect(() => {
   const fetchDepartments = async () => {
     try {
@@ -210,7 +200,6 @@ useEffect(() => {
   fetchDepartments();
 }, []);
 
-  // Handle shortlist confirmation
   const handleShortlistConfirm = async () => {
     if (!selectedDepartment) {
     toast.error('Please select a department');
@@ -236,7 +225,6 @@ useEffect(() => {
 
      const updatedSubmissionIds = await Promise.all(updatePromises);
 
-    // Then, assign personnel to department
     const assignResponse = await fetch('http://localhost:3000/users/assign-personnel-to-department', {
       method: 'POST',
       headers: {
@@ -254,7 +242,6 @@ useEffect(() => {
       throw new Error(errorData.message || 'Failed to assign personnel to department');
     }
 
-      // Update local state to remove shortlisted submissions
       setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
     setFilteredSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
     setShortlistedCount((prev) => prev + selectedRows.length);
@@ -270,7 +257,6 @@ useEffect(() => {
     }
   };
 
-  // Restrict to ADMIN or STAFF
   if (role !== 'ADMIN' && role !== 'STAFF') {
     return (
       <div className="flex items-center justify-center h-full">
@@ -279,11 +265,9 @@ useEffect(() => {
     );
   }
 
-  // Truncate text helper
   const truncateText = (text: string, maxLength: number = 15) =>
     text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 
-  // Table columns
   const columns = [
     {
       title: (

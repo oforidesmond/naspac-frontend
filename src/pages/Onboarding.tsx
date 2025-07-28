@@ -16,9 +16,7 @@ const Onboarding: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
-  // Security features to restrict navigation
   useEffect(() => {
-    // 1. Enter full-screen mode to hide browser controls
     const goFullScreen = () => {
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch((err) => {
@@ -28,31 +26,27 @@ const Onboarding: React.FC = () => {
     };
     goFullScreen();
 
-    // 2. Trap navigation with popstate to prevent back/forward
     const trapNavigation = () => {
       window.history.pushState(null, "", window.location.href);
     };
-    window.history.pushState(null, "", window.location.href); // Initial state
+    window.history.pushState(null, "", window.location.href);
     window.addEventListener("popstate", trapNavigation);
 
-    // 3. Disable right-click (context menu)
     const preventContextMenu = (e: Event) => e.preventDefault();
     document.addEventListener("contextmenu", preventContextMenu);
 
-    // 4. Block keyboard shortcuts
     const preventShortcuts = (e: KeyboardEvent) => {
       if (
-        e.ctrlKey || // Ctrl+anything (e.g., Ctrl+T, Ctrl+R)
-        e.altKey || // Alt+anything (e.g., Alt+Left for back)
-        ["F12", "Escape"].includes(e.key) || // Dev tools, Escape
-        (e.metaKey && ["t", "n", "r"].includes(e.key.toLowerCase())) // Cmd+T, Cmd+N, Cmd+R (Mac)
+        e.ctrlKey || 
+        e.altKey ||
+        ["F12", "Escape"].includes(e.key) || 
+        (e.metaKey && ["t", "n", "r"].includes(e.key.toLowerCase()))
       ) {
         e.preventDefault();
       }
     };
     document.addEventListener("keydown", preventShortcuts);
 
-    // Cleanup on component unmount
     return () => {
       window.removeEventListener("popstate", trapNavigation);
       document.removeEventListener("contextmenu", preventContextMenu);
@@ -63,13 +57,11 @@ const Onboarding: React.FC = () => {
     };
   }, []);
 
-  // Define carousel images
   const images: string[] = ["/carousel-image-1.jpg", "/carousel-image-2.jpg", "/carousel-image-3.jpg", "/carousel-image-4.png", "/carousel-image-5.jpg", "/carousel-image-6.jpg", "/carousel-image-7.jpg"];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side validation
     if (!nssNumber.trim()) {
       toast.error("Please enter an NSS Number", {
         position: "top-right",
@@ -87,7 +79,6 @@ const Onboarding: React.FC = () => {
       return;
     }
 
-    // Check for valid token
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("You must be logged in to initiate onboarding", {
@@ -97,7 +88,6 @@ const Onboarding: React.FC = () => {
       navigate("/staff-login");
       return;
     }
-    // Show confirmation modal
     setShowModal(true);
   };
 
@@ -122,7 +112,6 @@ const Onboarding: React.FC = () => {
         autoClose: 2000,
       });
 
-      // Clear form fields
       setNssNumber("");
       setEmail("");
     } catch (error: any) {
@@ -133,7 +122,6 @@ const Onboarding: React.FC = () => {
         autoClose: 3000,
       });
 
-      // Handle unauthorized (401) without redirect
       if (error.response?.status === 401) {
         toast.error("Session expired. Please log in again.", {
           position: "top-right",

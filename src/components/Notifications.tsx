@@ -22,7 +22,7 @@ interface NotificationsProps {
   maxDisplay?: number;
   onNotificationsViewed?: (newBadgeCount: number) => void;
   onNotificationsFetched?: (badgeCount: number) => void;
-  displayMode?: 'dropdown' | 'homepage' | 'full'; // New prop to control display
+  displayMode?: 'dropdown' | 'homepage' | 'full'; // prop to control display
 }
 
 const Notifications: React.FC<NotificationsProps> = ({

@@ -23,25 +23,22 @@ const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Define carousel images
+  // carousel images
    const images: string[] = ["/carousel-image-1.jpg", "/carousel-image-2.jpg", "/carousel-image-3.jpg", "/carousel-image-4.png", "/carousel-image-5.jpg", "/carousel-image-6.jpg", "/carousel-image-7.jpg"];
 
-  // Extract nssNumber and token from URL
   const nssNumber = searchParams.get("nssNumber");
   const token = searchParams.get("token");
 
-  // Check for missing URL parameters
   useEffect(() => {
     if (!token) {
       toast.error("Invalid or missing reset link. Please check your email.", {
         position: "top-right",
         autoClose: 3000,
       });
-      setTimeout(() => navigate("/login"), 3000); // Redirect to login after 3s
+      setTimeout(() => navigate("/login"), 3000);
     }
   }, [token, navigate]);
 
-  // Evaluate password strength with zxcvbn
   useEffect(() => {
     if (password) {
       const result = zxcvbn(password);
@@ -74,7 +71,6 @@ const ResetPassword: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side validation
     if (!password || !confirmPassword) {
       toast.error("Please fill in both password fields", {
         position: "top-right",
@@ -115,7 +111,6 @@ const ResetPassword: React.FC = () => {
         position: "top-right",
         autoClose: 2000,
       });
-      // Redirect to login page after success
       setTimeout(() => navigate("/login"), 2000);
     } catch (error: any) {
       const errorMessage =

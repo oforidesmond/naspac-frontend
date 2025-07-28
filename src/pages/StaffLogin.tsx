@@ -16,7 +16,6 @@ const StaffLogin: React.FC = () => {
   const { setRole } = useAuth();
   const navigate = useNavigate();
 
-  // Define carousel images
   const images: string[] = ["/carousel-image-1.jpg", "/carousel-image-2.jpg", "/carousel-image-3.jpg", "/carousel-image-4.png", "/carousel-image-5.jpg", "/carousel-image-6.jpg", "/carousel-image-7.jpg"];
 
   const togglePasswordVisibility = () => {
@@ -26,7 +25,6 @@ const StaffLogin: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
     if (!staffId.trim() || !password.trim()) {
       toast.error("Please enter both Staff ID and Password", {
         position: "top-right",
