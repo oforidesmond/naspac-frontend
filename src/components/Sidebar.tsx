@@ -6,6 +6,7 @@ import {
   PrinterOutlined,
   LogoutOutlined,
   MenuOutlined,
+  SendOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import './Sidebar.css';
@@ -133,6 +134,7 @@ const Sidebar: React.FC = () => {
     '3': role === 'PERSONNEL' ? '/endorsed-posting-letter' : '/shortlist',
     '4': role === 'PERSONNEL' ? '/upload-nss-document' : role === 'ADMIN' ? '/endorsement' : '/manage-personnel',
     '5': role === 'PERSONNEL' ? '/appointment-letter' : role === 'ADMIN' ? '/manage-personnel' : '/dept-placements',
+    '6': role === 'STAFF' ? '/send-letters' : '',
    '8': '/staff-management',
     '9': '/dept-placements', 
   };
@@ -187,6 +189,11 @@ const Sidebar: React.FC = () => {
           icon: <img src="/manage.svg" alt="Manage Personnel" className="sidebar-icon" />,
           label: 'Manage Personnel',
         },
+        {
+        key: '6',
+        icon: <SendOutlined className="sidebar-icon" />,
+        label: 'Send Appt. Letters',
+      },
         {
           key: '5',
           icon: <img src="/bank.svg" alt="Dept. Placements" className="sidebar-icon" />,

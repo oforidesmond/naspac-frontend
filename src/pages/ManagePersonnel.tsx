@@ -54,12 +54,12 @@ const Endorsement: React.FC = () => {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
           body: JSON.stringify({
-            statuses: ['VALIDATED'],
+            statuses: ['VALIDATED', 'COMPLETED'],
           }),
         });
         const data = await response.json();
         if (response.ok) {
-          setValidatedCount(data.VALIDATED || 0);
+          setValidatedCount((data.VALIDATED || 0) + (data.COMPLETED || 0));
         } else {
           toast.error(data.message || 'Failed to load validated count');
         }
@@ -74,53 +74,61 @@ const Endorsement: React.FC = () => {
 
   // Fetch submissions
   useEffect(() => {
-    const fetchSubmissions = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('http://localhost:3000/users/submissions', {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        const data: Submission[] = await response.json();
-        if (response.ok) {
-          // Filter for ENDORSED and VALIDATED status only
-         const filteredSubmissions = data.filter((s) => ['ENDORSED', 'VALIDATED'].includes(s.status));
-          setSubmissions(filteredSubmissions);
-          setFilteredSubmissions(statusFilter === 'All' 
-            ? filteredSubmissions 
-            : filteredSubmissions.filter((s) => s.status === statusFilter));
-        } else {
-          toast.error((data as any).message || 'Failed to load submissions');
-        }
-      } catch (error) {
-        toast.error('Failed to load submissions');
-      } finally {
-        setLoading(false);
+  const fetchSubmissions = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/users/submissions', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const data: Submission[] = await response.json();
+      if (response.ok) {
+        // Filter for ENDORSED, VALIDATED, and COMPLETED status
+        const filteredSubmissions = data.filter((s) => ['ENDORSED', 'VALIDATED', 'COMPLETED'].includes(s.status));
+        setSubmissions(filteredSubmissions);
+        setFilteredSubmissions(statusFilter === 'All' 
+          ? filteredSubmissions 
+          : filteredSubmissions.filter((s) => 
+              statusFilter === 'VALIDATED' 
+                ? ['VALIDATED', 'COMPLETED'].includes(s.status)
+                : s.status === statusFilter
+            ));
+      } else {
+        toast.error((data as any).message || 'Failed to load submissions');
       }
-    };
-    fetchSubmissions();
-  }, []);
+    } catch (error) {
+      toast.error('Failed to load submissions');
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchSubmissions();
+}, []);
 
   useEffect(() => {
-    let filtered = submissions;
-    if (statusFilter !== 'All') {
-      filtered = filtered.filter((s) => s.status === statusFilter);
-    }
-    if (searchTerm) {
-      const lowerSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (s) =>
-          s.fullName.toLowerCase().includes(lowerSearch) ||
-          s.nssNumber.toLowerCase().includes(lowerSearch) ||
-          s.email.toLowerCase().includes(lowerSearch) ||
-          s.universityAttended.toLowerCase().includes(lowerSearch),
-      );
-    }
-    setFilteredSubmissions(filtered);
-    setSelectedRows([]);
-  }, [statusFilter, searchTerm, submissions]);
+  let filtered = submissions;
+  if (statusFilter !== 'All') {
+    filtered = filtered.filter((s) => 
+      statusFilter === 'VALIDATED' 
+        ? ['VALIDATED', 'COMPLETED'].includes(s.status)
+        : s.status === statusFilter
+    );
+  }
+  if (searchTerm) {
+    const lowerSearch = searchTerm.toLowerCase();
+    filtered = filtered.filter(
+      (s) =>
+        s.fullName.toLowerCase().includes(lowerSearch) ||
+        s.nssNumber.toLowerCase().includes(lowerSearch) ||
+        s.email.toLowerCase().includes(lowerSearch) ||
+        s.universityAttended.toLowerCase().includes(lowerSearch),
+    );
+  }
+  setFilteredSubmissions(filtered);
+  setSelectedRows([]);
+}, [statusFilter, searchTerm, submissions]);
 
   // Selection handlers
   const handleSelectAll = () => {
@@ -502,7 +510,7 @@ const Endorsement: React.FC = () => {
           okButtonProps={{ className: '!bg-[#5B3418] !border-0' }}
           cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
         >
-          <p>Are you sure you want to validate {selectedRows.length} personnel and send them appointment letters?</p>
+          <p>Are you sure you want to validate {selectedRows.length} personnel?</p>
         </Modal>
       </div>
     </div>

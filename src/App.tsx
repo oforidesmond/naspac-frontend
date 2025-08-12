@@ -20,6 +20,7 @@ import { Spin } from 'antd';
 import NotificationsPage from './pages/NotificationsPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import SendAppointmentLetters from './pages/SendAppointmentLetters';
 
 const centeredSpinStyle: React.CSSProperties = {
   display: 'flex',
@@ -129,6 +130,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ManagePersonnel />
+                </ProtectedRoute>
+              }
+            />
+             <Route
+              path="/send-letters"
+              element={
+                <ProtectedRoute>
+                  <SendAppointmentLetters />
                 </ProtectedRoute>
               }
             />
