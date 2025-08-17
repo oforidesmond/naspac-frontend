@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Select, Input, Button, Typography, Space, Modal, Tooltip, Checkbox } from 'antd';
-import { SearchOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
+import { SearchOutlined, DownloadOutlined, EyeOutlined, FileExcelOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -44,7 +44,8 @@ const PersonnelSelection: React.FC = () => {
   const [shortlistModalVisible, setShortlistModalVisible] = useState(false);
   const [shortlistedCount, setShortlistedCount] = useState<number>(0);
   const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
-const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
+  const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
 
   useEffect(() => {
   const fetchShortlistedCount = async () => {
@@ -257,6 +258,43 @@ useEffect(() => {
     }
   };
 
+  const handleRejectConfirm = async () => {
+  setLoading(true);
+  try {
+    const updatePromises = selectedRows.map(async (id) => {
+      const response = await fetch(`http://localhost:3000/users/update-submission-status/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ 
+          status: 'REJECTED',
+          comment: 'Rejected from personnel selection'
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reject personnel');
+      }
+      return id;
+    });
+
+    await Promise.all(updatePromises);
+
+    setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+    setFilteredSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+    setSelectedRows([]);
+    setRejectModalVisible(false);
+    toast.success(`${selectedRows.length} personnel rejected successfully`);
+    window.location.reload();
+  } catch (error: any) {
+    toast.error(error.message || 'Failed to reject personnel');
+  } finally {
+    setLoading(false);
+  }
+};
+
   if (role !== 'ADMIN' && role !== 'STAFF') {
     return (
       <div className="flex items-center justify-center h-full">
@@ -422,6 +460,14 @@ useEffect(() => {
                 >
                   Shortlist
                 </Button>
+                <Button
+                  type="primary"
+                  onClick={() => setRejectModalVisible(true)}
+                  className="!bg-[#c95757] hover:!bg-[#b34646] !border-0"
+                  icon={<FileExcelOutlined />}
+                >
+                  Reject
+                </Button>
               </Space>
             )}
             <Select
@@ -543,6 +589,18 @@ useEffect(() => {
             </div>
           </div>
         </div>
+      </Modal>
+      <Modal
+        title="Confirm Rejection"
+        open={rejectModalVisible}
+        onOk={handleRejectConfirm}
+        onCancel={() => setRejectModalVisible(false)}
+        okText="Confirm"
+        cancelText="Cancel"
+        okButtonProps={{ className: '!bg-[#5B3418] !text-white !border-0' }}
+        cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
+      >
+        <p>Are you sure you want to reject {selectedRows.length} personnel? This action will notify them to do reposting.</p>
       </Modal>
       </div>
     </div>
