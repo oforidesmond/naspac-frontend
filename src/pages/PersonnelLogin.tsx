@@ -23,7 +23,7 @@ const PersonnelLogin: React.FC = () => {
   const navigate = useNavigate();
 
   const MAX_RESEND_ATTEMPTS = 3;
-  const COOLDOWN_SECONDS = 30;
+  const COOLDOWN_SECONDS = 160;
 
   const images: string[] = [
     '/carousel-image-1.jpg',
@@ -240,7 +240,7 @@ const PersonnelLogin: React.FC = () => {
     <div className="flex flex-row justify-center w-full min-h-screen relative">
       <button
         onClick={handleStaffLoginRedirect}
-        className="absolute z-50 top-2 left-2 w-10 h-10 opacity-80 hover:opacity-120 focus:outline-none"
+        className="absolute z-50 top-2 left-2 w-12 h-12 opacity-100 hover:opacity-120 focus:outline-none"
         aria-label="Staff Login"
       >
         <svg

@@ -23,7 +23,7 @@ const StaffLogin: React.FC = () => {
   const navigate = useNavigate();
 
   const MAX_RESEND_ATTEMPTS = 3;
-  const COOLDOWN_SECONDS = 30;
+  const COOLDOWN_SECONDS = 120;
 
   const images: string[] = [
     "/carousel-image-1.jpg",
@@ -133,6 +133,7 @@ const StaffLogin: React.FC = () => {
           Authorization: `Bearer ${tempAccessToken}`,
         },
         body: JSON.stringify({ tfaToken }),
+        credentials: "include",
       });
       const data = await response.json();
       if (data.accessToken && (data.role === "ADMIN" || data.role === "STAFF" || data.role === "SUPERVISOR")) {

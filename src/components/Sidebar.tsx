@@ -21,6 +21,7 @@ interface PersonnelStatus {
 const Sidebar: React.FC = () => {
    const { role, logout, userId } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false); // State for modal visibility
   const navigate = useNavigate();
   const [statusData, setStatusData] = useState<PersonnelStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
@@ -28,6 +29,24 @@ const Sidebar: React.FC = () => {
    const [hasUploaded, setHasUploaded] = useState(false);
    const [appointmentLoading, setAppointmentLoading] = useState(false); 
   const [endorsedLoading, setEndorsedLoading] = useState(false);
+
+  // Handle logout confirmation
+  const handleLogout = () => {
+    console.log('handleLogout triggered');
+    setIsLogoutModalVisible(true); // Show the modal
+  };
+
+  const handleModalOk = () => {
+    console.log('Modal confirmed, calling logout');
+    logout();
+    setIsLogoutModalVisible(false); // Close the modal
+  };
+
+  const handleModalCancel = () => {
+    console.log('Modal cancelled');
+    setIsLogoutModalVisible(false); // Close the modal
+  };
+
 
   useEffect(() => {
     const fetchPersonnelStatus = async () => {
@@ -134,14 +153,14 @@ const Sidebar: React.FC = () => {
     '3': role === 'PERSONNEL' ? '/endorsed-posting-letter' : '/shortlist',
     '4': role === 'PERSONNEL' ? '/upload-nss-document' : role === 'ADMIN' ? '/endorsement' : '/manage-personnel',
     '5': role === 'PERSONNEL' ? '/appointment-letter' : role === 'ADMIN' ? '/manage-personnel' : '/dept-placements',
-    '6': role === 'STAFF' ? '/send-letters' : '',
-   '8': '/staff-management',
-    '9': '/dept-placements', 
+    '6': '/send-letters',
+    '8': '/staff-management',
+    '9': '/dept-placements',
   };
 
   const settingsRouteMap: { [key: string]: string } = {
-  '6': '/profile',
-  '7': '/notices',
+  '7': '/profile',
+  '8': '/notices',
 };
   // Role-based menu items
   const getMenuItems = () => {
@@ -174,6 +193,11 @@ const Sidebar: React.FC = () => {
           icon: <img src="/bank.svg" alt="Dept. Placements" className="sidebar-icon" />,
           label: 'Dept. Placements',
         },
+        //  {
+        //   key: '7', // Profile item
+        //   icon: <UserOutlined className="sidebar-icon" />,
+        //   label: 'Profile',
+        // },
       ];
     } else if (role === 'STAFF') {
       return [
@@ -185,20 +209,25 @@ const Sidebar: React.FC = () => {
           label: 'Shortlist Personnel',
         },
         {
+        key: '6',
+        icon: <SendOutlined className="sidebar-icon" />,
+        label: 'Send Appt. Letters',
+      },
+      {
           key: '4',
           icon: <img src="/manage.svg" alt="Manage Personnel" className="sidebar-icon" />,
           label: 'Manage Personnel',
         },
         {
-        key: '6',
-        icon: <SendOutlined className="sidebar-icon" />,
-        label: 'Send Appt. Letters',
-      },
-        {
           key: '5',
           icon: <img src="/bank.svg" alt="Dept. Placements" className="sidebar-icon" />,
           label: 'Dept. Placements',
         },
+        //   {
+        //   key: '7', // Profile item
+        //   icon: <UserOutlined className="sidebar-icon" />,
+        //   label: 'Profile',
+        // },
       ];
     }
     // Personnel menu
@@ -242,7 +271,7 @@ const Sidebar: React.FC = () => {
 
   // Settings menu (same for all roles)
   const settingsItems = [
-    { key: '6', icon: <UserOutlined className="sidebar-icon" />, label: 'Profile' },
+    { key: '7', icon: <UserOutlined className="sidebar-icon" />, label: 'Profile' },
     // { key: '7', icon: <BellOutlined className="sidebar-icon" />, label: 'Notices' },
   ];
 
@@ -391,10 +420,9 @@ const Sidebar: React.FC = () => {
         }))}
         className="bg-transparent border-0 settings-menu"
       />
-
-      <Button
+<Button
         type="default"
-        onClick={logout}
+        onClick={handleLogout}
         className="flex items-center gap-2 sm:gap-3 logout-button px-4 py-2 rounded-[5px] border-[#a9a7a7] text-white bg-transparent hover:bg-[#6b3e1d] hover:text-white hover:border-[#a9a7a7]"
       >
         <LogoutOutlined className="sidebar-icon" />
@@ -402,6 +430,24 @@ const Sidebar: React.FC = () => {
           <span className="font-medium text-sm truncate">Logout</span>
         )}
       </Button>
+      <Modal
+        title="Confirm Logout"
+        open={isLogoutModalVisible}
+        onOk={handleModalOk}
+        onCancel={handleModalCancel}
+        okText="Logout"
+        cancelText="Cancel"
+        okButtonProps={{ danger: true,
+    style: { 
+        backgroundColor: '#dc2626',
+        border: 'none'
+    } 
+}}
+        cancelButtonProps={{ className: 'text-white !border-0 !bg-gray-600' }}
+        zIndex={10000}
+      >
+        <p>Are you sure you want to log out?</p>
+      </Modal>
         <Modal
         title="Upload Verification Form"
         open={uploadModalVisible}
