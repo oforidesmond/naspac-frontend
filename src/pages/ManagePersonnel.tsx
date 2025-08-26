@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, Input, Button, Typography, Space, Modal, Tooltip, Checkbox } from 'antd';
-import { SearchOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
+import { Table, Select, Input, Button, Typography, Space, Modal, Tooltip, Checkbox, Form } from 'antd';
+import { SearchOutlined, DownloadOutlined, EyeOutlined, FilterOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -35,7 +35,6 @@ const Endorsement: React.FC = () => {
   const { role } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>('ENDORSED');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -43,7 +42,10 @@ const Endorsement: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [shortlistModalVisible, setShortlistModalVisible] = useState(false);
   const [validatedCount, setValidatedCount] = useState<number>(0);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [filterForm] = Form.useForm();
 
+  // Fetch validated count
   useEffect(() => {
     const fetchValidatedCount = async () => {
       try {
@@ -67,70 +69,95 @@ const Endorsement: React.FC = () => {
         toast.error('Failed to load validated count');
       }
     };
-   if (role && ['ADMIN', 'STAFF'].includes(role)) {
-    fetchValidatedCount();
+    if (role && ['ADMIN', 'STAFF'].includes(role)) {
+      fetchValidatedCount();
     }
   }, [role]);
 
   // Fetch submissions
   useEffect(() => {
-  const fetchSubmissions = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('http://localhost:3000/users/submissions', {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const data: Submission[] = await response.json();
-      if (response.ok) {
-        // Filter for ENDORSED, VALIDATED, and COMPLETED status
-        const filteredSubmissions = data.filter((s) => ['ENDORSED', 'VALIDATED', 'COMPLETED'].includes(s.status));
-        setSubmissions(filteredSubmissions);
-        setFilteredSubmissions(statusFilter === 'All' 
-          ? filteredSubmissions 
-          : filteredSubmissions.filter((s) => 
-              statusFilter === 'VALIDATED' 
-                ? ['VALIDATED', 'COMPLETED'].includes(s.status)
-                : s.status === statusFilter
-            ));
-      } else {
-        toast.error((data as any).message || 'Failed to load submissions');
+    const fetchSubmissions = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('http://localhost:3000/users/total-submissions', {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        const data: Submission[] = await response.json();
+        if (response.ok) {
+          setSubmissions(data);
+          setFilteredSubmissions(data);
+        } else {
+          toast.error((data as any).message || 'Failed to load submissions');
+        }
+      } catch (error) {
+        toast.error('Failed to load submissions');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      toast.error('Failed to load submissions');
-    } finally {
-      setLoading(false);
+    };
+    if (role && ['ADMIN', 'STAFF'].includes(role)) {
+      fetchSubmissions();
     }
+  }, [role]);
+
+  const applyFilters = (values: any) => {
+    let filtered = [...submissions];
+    
+    // Status filter
+    if (values.status && values.status !== 'All') {
+      filtered = filtered.filter((s) => 
+        values.status === 'VALIDATED' 
+          ? ['VALIDATED', 'COMPLETED'].includes(s.status)
+          : s.status === values.status
+      );
+    }
+
+    // Year
+    if (values.yearOfNSS) {
+      filtered = filtered.filter((s) => s.yearOfNSS === values.yearOfNSS);
+    }
+
+    // Gender
+    if (values.gender) {
+      filtered = filtered.filter((s) => s.gender === values.gender);
+    }
+
+    // Region
+    if (values.regionOfSchool) {
+      filtered = filtered.filter((s) => s.regionOfSchool === values.regionOfSchool);
+    }
+
+    setFilteredSubmissions(filtered);
+    setFilterModalVisible(false);
   };
-  fetchSubmissions();
-}, []);
 
+  const resetFilters = () => {
+    filterForm.resetFields();
+    setFilteredSubmissions(submissions);
+    setFilterModalVisible(false);
+  };
+
+  // Search handler
   useEffect(() => {
-  let filtered = submissions;
-  if (statusFilter !== 'All') {
-    filtered = filtered.filter((s) => 
-      statusFilter === 'VALIDATED' 
-        ? ['VALIDATED', 'COMPLETED'].includes(s.status)
-        : s.status === statusFilter
-    );
-  }
-  if (searchTerm) {
-    const lowerSearch = searchTerm.toLowerCase();
-    filtered = filtered.filter(
-      (s) =>
-        s.fullName.toLowerCase().includes(lowerSearch) ||
-        s.nssNumber.toLowerCase().includes(lowerSearch) ||
-        s.email.toLowerCase().includes(lowerSearch) ||
-        s.universityAttended.toLowerCase().includes(lowerSearch),
-    );
-  }
-  setFilteredSubmissions(filtered);
-  setSelectedRows([]);
-}, [statusFilter, searchTerm, submissions]);
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      const filtered = submissions.filter(
+        (s) =>
+          s.fullName.toLowerCase().includes(lowerSearch) ||
+          s.nssNumber.toLowerCase().includes(lowerSearch) ||
+          s.email.toLowerCase().includes(lowerSearch) ||
+          s.universityAttended.toLowerCase().includes(lowerSearch)
+      );
+      setFilteredSubmissions(filtered);
+    } else {
+      setFilteredSubmissions(submissions);
+    }
+    setSelectedRows([]);
+  }, [searchTerm, submissions]);
 
-  // Selection handlers
   const handleSelectAll = () => {
     if (selectedRows.length === filteredSubmissions.length) {
       setSelectedRows([]);
@@ -145,7 +172,6 @@ const Endorsement: React.FC = () => {
     );
   };
 
-  // Export to Excel
   const exportToExcel = () => {
     const exportData = (selectedRows.length > 0
       ? filteredSubmissions.filter((s) => selectedRows.includes(s.id))
@@ -177,91 +203,84 @@ const Endorsement: React.FC = () => {
     saveAs(blob, 'personnel_submissions.xlsx');
   };
 
-  // Handle letter view
   const showLetter = (url: string, type: string, id?: number) => {
-     console.log('Showing letter:', { url, type, id });
     setModalContent({ url, type, id });
     setModalVisible(true);
   };
 
-  // Handle download
   const handleDownload = () => {
     if (modalContent?.url) {
       window.open(modalContent.url, '_blank');
     }
   };
 
-  // Handle validate action
- const handleValidate = async () => {
-  if (!modalContent?.id) return;
-   console.log('Validating submission:', modalContent.id);
-  setLoading(true);
-  try {
-    const response = await fetch(`http://localhost:3000/users/update-submission-status/${modalContent.id}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify({
-       status: 'VALIDATED',
-      }),
-    });
-    if (response.ok) {
-      // Update local state
-      setSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
-        setFilteredSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
-        setModalVisible(false);
-        setValidatedCount((prev) => prev + 1);
-        toast.success('Appointment letter validated successfully');
-        window.location.reload();
-    } else {
-      const errorData = await response.json();
-      toast.error(errorData.message || 'Failed to validate appointment letter');
-    }
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to validate appointment letter');
-  } finally {
-    setLoading(false);
-  }
-};
-
-  const handleShortlistConfirm = async () => {
-  setLoading(true);
-  try {
-    const updatePromises = selectedRows.map(async (id) => {
-      const response = await fetch(`http://localhost:3000/users/update-submission-status/${id}`, {
+  const handleValidate = async () => {
+    if (!modalContent?.id) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/users/update-submission-status/${modalContent.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
-         status: 'VALIDATED',
+          status: 'VALIDATED',
         }),
       });
-      if (!response.ok) {
+      if (response.ok) {
+        setSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
+        setFilteredSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
+        setModalVisible(false);
+        setValidatedCount((prev) => prev + 1);
+        toast.success('Appointment letter validated successfully');
+        window.location.reload();
+      } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to validate appointment letter');
+        toast.error(errorData.message || 'Failed to validate appointment letter');
       }
-    });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to validate appointment letter');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    await Promise.all(updatePromises);
+  const handleShortlistConfirm = async () => {
+    setLoading(true);
+    try {
+      const updatePromises = selectedRows.map(async (id) => {
+        const response = await fetch(`http://localhost:3000/users/update-submission-status/${id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            status: 'VALIDATED',
+          }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to validate appointment letter');
+        }
+      });
 
-    // Update local state
-    setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+      await Promise.all(updatePromises);
+
+      setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
       setFilteredSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
       setValidatedCount((prev) => prev + selectedRows.length);
       setSelectedRows([]);
       setShortlistModalVisible(false);
       toast.success(`${selectedRows.length} verification forms validated`);
       window.location.reload();
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to validate verification forms');
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to validate verification forms');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!role || (role !== 'ADMIN' && role !== 'STAFF')) {
     return (
@@ -274,7 +293,6 @@ const Endorsement: React.FC = () => {
   const truncateText = (text: string, maxLength: number = 15) =>
     text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 
-  // Table columns
   const columns = [
     {
       title: (
@@ -282,16 +300,14 @@ const Endorsement: React.FC = () => {
           checked={selectedRows.length === filteredSubmissions.length && filteredSubmissions.length > 0}
           indeterminate={selectedRows.length > 0 && selectedRows.length < filteredSubmissions.length}
           onChange={handleSelectAll}
-          disabled={statusFilter === 'VALIDATED'}
         />
       ),
       key: 'selection',
       width: 10,
       render: (_: any, record: Submission) => (
-         <Checkbox
+        <Checkbox
           checked={selectedRows.includes(record.id)}
           onChange={() => handleRowSelect(record.id)}
-          disabled={statusFilter === 'VALIDATED'}
         />
       ),
     },
@@ -390,6 +406,10 @@ const Endorsement: React.FC = () => {
     },
   ];
 
+  const uniqueYears = Array.from(new Set(submissions.map(s => s.yearOfNSS))).sort();
+  const uniqueRegions = Array.from(new Set(submissions.map(s => s.regionOfSchool))).sort();
+  const uniqueGenders = Array.from(new Set(submissions.map(s => s.gender))).sort();
+
   return (
     <div className="flex flex-col min-h-screen px-2 py-4">
       <div className="w-full max-w-full mx-auto">
@@ -399,7 +419,7 @@ const Endorsement: React.FC = () => {
             <Text className="text-base font-semibold text-[#5B3418] bg-amber-100 px-3 py-1 rounded-md">
               Total Validated: {validatedCount}
             </Text>
-            {selectedRows.length > 0 && statusFilter !== 'VALIDATED' && (
+            {selectedRows.length > 0 && (
               <Space>
                 <Text>{`${selectedRows.length} selected`}</Text>
                 <Button
@@ -411,16 +431,13 @@ const Endorsement: React.FC = () => {
                 </Button>
               </Space>
             )}
-            <Select
-              value={statusFilter}
-              onChange={setStatusFilter}
-              className="rounded-md w-fit sm:w-48"
-              placeholder="Filter by status"
+            <Button
+              icon={<FilterOutlined />}
+              onClick={() => setFilterModalVisible(true)}
+              className="!bg-[#572707] hover:!bg-[#6b432f] !border-0"
             >
-              <Option value="ENDORSED">Validate</Option>
-              <Option value="VALIDATED">Completed Validation</Option>
-              {/* <Option value="All">All</Option> */}
-            </Select>
+              Filter
+            </Button>
           </Space>
           <Space className="w-full sm:w-auto">
             <Input
@@ -451,7 +468,7 @@ const Endorsement: React.FC = () => {
           pagination={{ pageSize: 10 }}
           onRow={(record) => ({
             onClick: (event) => {
-              if (!(event.target as HTMLElement).closest('.ant-btn, .ant-checkbox') && statusFilter !== 'VALIDATED') {
+              if (!(event.target as HTMLElement).closest('.ant-btn, .ant-checkbox')) {
                 handleRowSelect(record.id);
               }
             },
@@ -470,7 +487,7 @@ const Endorsement: React.FC = () => {
             >
               Download
             </Button>,
-            modalContent?.type === 'Verification Form' && statusFilter !== 'VALIDATED' && (
+            modalContent?.type === 'Verification Form' && (
               <Button
                 key="validate"
                 className="!bg-[#34515c] hover:!bg-[#2c3e50] !border-0"
@@ -511,6 +528,53 @@ const Endorsement: React.FC = () => {
           cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
         >
           <p>Are you sure you want to validate {selectedRows.length} personnel?</p>
+        </Modal>
+        <Modal
+          title="Filter Submissions"
+          open={filterModalVisible}
+          onOk={() => filterForm.submit()}
+          onCancel={() => setFilterModalVisible(false)}
+          okText="Apply Filters"
+          cancelText="Cancel"
+          okButtonProps={{ className: '!bg-[#5B3418] !border-0' }}
+          cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
+          width={600}
+        >
+          <Form
+            form={filterForm}
+            layout="vertical"
+            onFinish={applyFilters}
+          >
+            <Form.Item name="status" label="Status">
+              <Select allowClear placeholder="Select status">
+                <Option value="All">All</Option>
+                <Option value="ENDORSED">Endorsed</Option>
+                <Option value="VALIDATED">Validated & Completed</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="yearOfNSS" label="Year of NSS">
+              <Select allowClear placeholder="Select year">
+                {uniqueYears.map(year => (
+                  <Option key={year} value={year}>{year}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="gender" label="Gender">
+              <Select allowClear placeholder="Select gender">
+                {uniqueGenders.map(gender => (
+                  <Option key={gender} value={gender}>{gender}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item name="regionOfSchool" label="Region of School">
+              <Select allowClear placeholder="Select region">
+                {uniqueRegions.map(region => (
+                  <Option key={region} value={region}>{region}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Button onClick={resetFilters} className='!bg-[#726e6e] !border-0'>Reset Filters</Button>
+          </Form>
         </Modal>
       </div>
     </div>

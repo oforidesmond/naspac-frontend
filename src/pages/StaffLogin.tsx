@@ -23,7 +23,7 @@ const StaffLogin: React.FC = () => {
   const navigate = useNavigate();
 
   const MAX_RESEND_ATTEMPTS = 3;
-  const COOLDOWN_SECONDS = 120;
+  const COOLDOWN_SECONDS = 180;
 
   const images: string[] = [
     "/carousel-image-1.jpg",
@@ -87,7 +87,7 @@ const StaffLogin: React.FC = () => {
         setIs2FAStep(true);
         setResendAttempts(0);
         setResendCooldown(0);
-        toast.info("OTP sent to your phone. Please enter the code.", {
+        toast.info("OTP sent to your phone number. Please enter the code.", {
           position: "top-right",
           autoClose: 10000,
         });
