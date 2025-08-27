@@ -18,6 +18,7 @@ interface Staff {
   staffId: string;
   name: string;
   email: string;
+  phoneNumber: string; // Added phoneNumber to Staff interface
   role: 'ADMIN' | 'STAFF' | 'SUPERVISOR';
   departmentsSupervised: Department[];
 }
@@ -35,11 +36,14 @@ const StaffManagement: React.FC = () => {
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
 
+  // Define API base URL
+  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
   useEffect(() => {
     const fetchStaff = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/users/staff', {
+        const response = await fetch(`${apiBase}/users/staff`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -71,10 +75,10 @@ const StaffManagement: React.FC = () => {
     setFilteredStaffList(filtered);
   }, [roleFilter, staffList]);
 
-  const handleCreateUser = async (values: { staffId: string; name: string; email: string; role: string }) => {
+  const handleCreateUser = async (values: { staffId: string; name: string; email: string; phoneNumber: string; role: string }) => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/auth/init-user', {
+      const response = await fetch(`${apiBase}/auth/init-user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,12 +104,12 @@ const StaffManagement: React.FC = () => {
     }
   };
 
-  const handleUpdateUser = async (values: { staffId: string; name: string; email: string; role: string }) => {
+  const handleUpdateUser = async (values: { staffId: string; name: string; email: string; phoneNumber: string; role: string }) => {
     if (!selectedStaff) return;
-    
+
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/users/staff/${selectedStaff.id}`, {
+      const response = await fetch(`${apiBase}/users/staff/${selectedStaff.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -140,10 +144,10 @@ const StaffManagement: React.FC = () => {
 
   const handleDeleteUser = async () => {
     if (!selectedStaff) return;
-    
+
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/users/staff/${selectedStaff.id}/delete`, {
+      const response = await fetch(`${apiBase}/users/staff/${selectedStaff.id}/delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -154,6 +158,7 @@ const StaffManagement: React.FC = () => {
         setStaffList((prev) => prev.filter((staff) => staff.id !== selectedStaff.id));
         setFilteredStaffList((prev) => prev.filter((staff) => staff.id !== selectedStaff.id));
         setEditModalVisible(false);
+        setConfirmDeleteVisible(false);
         toast.success('User deleted successfully');
       } else {
         const data = await response.json();
@@ -197,6 +202,13 @@ const StaffManagement: React.FC = () => {
       ellipsis: true,
     },
     {
+      title: 'Phone',
+      dataIndex: 'phoneNumber', // Added Phone column
+      key: 'phoneNumber',
+      width: 120,
+      ellipsis: true,
+    },
+    {
       title: 'Role',
       dataIndex: 'role',
       key: 'role',
@@ -226,7 +238,7 @@ const StaffManagement: React.FC = () => {
       render: (_: any, record: Staff) => (
         <Button
           type="link"
-          icon={<EditOutlined className='!text-[#5B3418]' />}
+          icon={<EditOutlined className="!text-[#5B3418]" />}
           onClick={() => {
             setSelectedStaff(record);
             setEditModalVisible(true);
@@ -234,10 +246,11 @@ const StaffManagement: React.FC = () => {
               name: record.name,
               staffId: record.staffId,
               email: record.email,
+              phoneNumber: record.phoneNumber, // Added phoneNumber
               role: record.role,
             });
           }}
-        ></Button>
+        />
       ),
     },
   ];
@@ -321,6 +334,19 @@ const StaffManagement: React.FC = () => {
               <Input placeholder="Enter email" />
             </Form.Item>
             <Form.Item
+              name="phoneNumber"
+              label="Phone Number"
+              rules={[
+                { required: true, message: 'Please enter phone number' },
+                {
+                  pattern: /^\+?\d{10,15}$/,
+                  message: 'Please enter a valid phone number (10-15 digits, optional +)',
+                },
+              ]}
+            >
+              <Input placeholder="Enter phone number" type="tel" />
+            </Form.Item>
+            <Form.Item
               name="role"
               label="Role"
               rules={[{ required: true, message: 'Please select a role' }]}
@@ -356,105 +382,118 @@ const StaffManagement: React.FC = () => {
         </Modal>
         {/* Edit User Modal */}
         <Modal
-        title="Edit User"
-        open={editModalVisible}
-        onCancel={() => {
-          setEditModalVisible(false);
-          setSelectedStaff(null);
-          editForm.resetFields();
-        }}
-        footer={null}
-        className="centered-modal"
-      >
-        <Form
-          form={editForm}
-          onFinish={handleUpdateUser}
-          layout="vertical"
-          className="mt-4"
+          title="Edit User"
+          open={editModalVisible}
+          onCancel={() => {
+            setEditModalVisible(false);
+            setSelectedStaff(null);
+            editForm.resetFields();
+          }}
+          footer={null}
+          className="centered-modal"
         >
-          <Form.Item
-            name="name"
-            label="Full Name"
-            rules={[{ required: true, message: 'Please enter full name' }]}
+          <Form
+            form={editForm}
+            onFinish={handleUpdateUser}
+            layout="vertical"
+            className="mt-4"
           >
-            <Input placeholder="Enter full name" />
-          </Form.Item>
-          <Form.Item
-            name="staffId"
-            label="Staff ID"
-            rules={[{ required: true, message: 'Please enter staff ID' }]}
-          >
-            <Input placeholder="Enter staff ID" />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Please enter email' },
-              { type: 'email', message: 'Please enter a valid email' },
-            ]}
-          >
-            <Input placeholder="Enter email" />
-          </Form.Item>
-          <Form.Item
-            name="role"
-            label="Role"
-            rules={[{ required: true, message: 'Please select a role' }]}
-          >
-            <Select placeholder="Select role">
-              <Option value="ADMIN">Admin</Option>
-              <Option value="STAFF">Staff</Option>
-              <Option value="SUPERVISOR">Supervisor</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item>
-            <div className="flex justify-between">
-              <Space>
+            <Form.Item
+              name="name"
+              label="Full Name"
+              rules={[{ required: true, message: 'Please enter full name' }]}
+            >
+              <Input placeholder="Enter full name" />
+            </Form.Item>
+            <Form.Item
+              name="staffId"
+              label="Staff ID"
+              rules={[{ required: true, message: 'Please enter staff ID' }]}
+            >
+              <Input placeholder="Enter staff ID" />
+            </Form.Item>
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[
+                { required: true, message: 'Please enter email' },
+                { type: 'email', message: 'Please enter a valid email' },
+              ]}
+            >
+              <Input placeholder="Enter email" />
+            </Form.Item>
+            <Form.Item
+              name="phoneNumber"
+              label="Phone Number"
+              rules={[
+                { required: true, message: 'Please enter phone number' },
+                {
+                  pattern: /^\+?\d{10,15}$/,
+                  message: 'Please enter a valid phone number (10-15 digits, optional +)',
+                },
+              ]}
+            >
+              <Input placeholder="Enter phone number" type="tel" />
+            </Form.Item>
+            <Form.Item
+              name="role"
+              label="Role"
+              rules={[{ required: true, message: 'Please select a role' }]}
+            >
+              <Select placeholder="Select role">
+                <Option value="ADMIN">Admin</Option>
+                <Option value="STAFF">Staff</Option>
+                <Option value="SUPERVISOR">Supervisor</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item>
+              <div className="flex justify-between">
+                <Space>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    className="!bg-[#5B3418] hover:!bg-[#4a2c1c] !border-0"
+                  >
+                    Update
+                  </Button>
+                  <Button
+                    className="!bg-[#999696] !border-0"
+                    onClick={() => {
+                      setEditModalVisible(false);
+                      setSelectedStaff(null);
+                      editForm.resetFields();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </Space>
                 <Button
-                  type="primary"
-                  htmlType="submit"
+                  className="!bg-[#b95a5a] !border-0"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => setConfirmDeleteVisible(true)}
                   loading={loading}
-                  className="!bg-[#5B3418] hover:!bg-[#4a2c1c] !border-0"
                 >
-                  Update
+                  Delete
                 </Button>
-                <Button
-                  className="!bg-[#999696] !border-0"
-                  onClick={() => {
-                    setEditModalVisible(false);
-                    setSelectedStaff(null);
-                    editForm.resetFields();
-                  }}
-                >
-                  Cancel
-                </Button>
-              </Space>
-              <Button
-              className='!bg-[#b95a5a] !border-0'
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => setConfirmDeleteVisible(true)}
-                loading={loading}
-              >
-                Delete
-              </Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
-      {/* Delete Confirmation Modal */}
-      <Modal
-        title="Confirm Delete"
-        open={confirmDeleteVisible}
-        onOk={handleDeleteUser}
-        onCancel={() => setConfirmDeleteVisible(false)}
-        okText="Delete"
-        okButtonProps={{ danger: true, className: '!bg-[#b95a5a]', loading: loading }}
-        cancelButtonProps={{ disabled: loading, className: '!bg-[#999696]' }}
-        className="centered-modal"
-      >
-        <p>Are you sure you want to delete this user? This action cannot be undone.</p>
-      </Modal>
+              </div>
+            </Form.Item>
+          </Form>
+        </Modal>
+        {/* Delete Confirmation Modal */}
+        <Modal
+          title="Confirm Delete"
+          open={confirmDeleteVisible}
+          onOk={handleDeleteUser}
+          onCancel={() => setConfirmDeleteVisible(false)}
+          okText="Delete"
+          okButtonProps={{ danger: true, className: '!bg-[#b95a5a]', loading: loading }}
+          cancelButtonProps={{ disabled: loading, className: '!bg-[#999696]' }}
+          className="centered-modal"
+        >
+          <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+        </Modal>
       </div>
     </div>
   );

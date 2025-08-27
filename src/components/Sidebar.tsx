@@ -178,6 +178,11 @@ const Sidebar: React.FC = () => {
           icon: <img src="/endorse.svg" alt="Endorsement" className="sidebar-icon" />,
           label: 'Endorsement',
         },
+             {
+        key: '6',
+        icon: <SendOutlined className="sidebar-icon" />,
+        label: 'Send Appt. Letters',
+      },
         {
           key: '5',
           icon: <img src="/manage.svg" alt="Manage Personnel" className="sidebar-icon" />,
@@ -193,11 +198,6 @@ const Sidebar: React.FC = () => {
           icon: <img src="/bank.svg" alt="Dept. Placements" className="sidebar-icon" />,
           label: 'Dept. Placements',
         },
-        //  {
-        //   key: '7', // Profile item
-        //   icon: <UserOutlined className="sidebar-icon" />,
-        //   label: 'Profile',
-        // },
       ];
     } else if (role === 'STAFF') {
       return [

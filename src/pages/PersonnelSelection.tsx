@@ -7,6 +7,9 @@ import { saveAs } from 'file-saver';
 import { useAuth } from '../AuthContext';
 import '../components/PersonnelSelection.css';
 
+const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const getAbsoluteUrl = (url: string) => (url && url.startsWith('http') ? url : `${apiBase}${url || ''}`);
+
 const { Option } = Select;
 const { Text } = Typography;
 
@@ -28,6 +31,9 @@ interface Submission {
   createdAt: string;
   updatedAt: string;
   programStudied: string;
+  user: {
+    phoneNumber: string;
+  };
 }
 
 const PersonnelSelection: React.FC = () => {
@@ -50,7 +56,7 @@ const PersonnelSelection: React.FC = () => {
   useEffect(() => {
   const fetchShortlistedCount = async () => {
     try {
-      const response = await fetch('http://localhost:3000/users/submission-status-counts', {
+      const response = await fetch(`${apiBase}/users/submission-status-counts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +85,7 @@ const PersonnelSelection: React.FC = () => {
     const fetchSubmissions = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/users/submissions', {
+        const response = await fetch(`${apiBase}/users/submissions`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -176,14 +182,15 @@ const PersonnelSelection: React.FC = () => {
 
   const handleDownload = () => {
     if (modalContent?.url) {
-      window.open(modalContent.url, '_blank');
+      const fileUrl = getAbsoluteUrl(modalContent.url);
+      window.open(fileUrl, '_blank');
     }
   };
 
 useEffect(() => {
   const fetchDepartments = async () => {
     try {
-      const response = await fetch('http://localhost:3000/users/departments', {
+      const response = await fetch(`${apiBase}/users/departments`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -544,7 +551,7 @@ useEffect(() => {
         >
           {modalContent?.url && (
             <iframe
-              src={modalContent.url}
+             src={getAbsoluteUrl(modalContent.url)}
               style={{ width: '100%', height: '80vh', border: 'none' }}
               title={modalContent.type}
             />

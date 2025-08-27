@@ -31,7 +31,7 @@ const OnboardingForm: React.FC = () => {
   const [form] = Form.useForm();
   const [universities, setUniversities] = useState<University[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-   const [canSubmit, setCanSubmit] = useState(false);
+  const [canSubmit, setCanSubmit] = useState(false);
 
   // Fetch user data from JWT
   useEffect(() => {
@@ -40,7 +40,7 @@ const OnboardingForm: React.FC = () => {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         // console.log('JWT Payload:', payload);
-        form.setFieldsValue({ nssNumber: payload.identifier, email: payload.email || '' });
+        form.setFieldsValue({ nssNumber: payload.identifier, email: payload.email || '', phoneNumber: payload.phoneNumber || '' });
       } catch (error) {
         // console.error('Failed to decode JWT:', error);
         toast.error('Failed to load user data');
@@ -236,7 +236,7 @@ const OnboardingForm: React.FC = () => {
             <Select className="rounded-md">
               <Option value="MALE">Male</Option>
               <Option value="FEMALE">Female</Option>
-              <Option value="OTHER">Other</Option>
+              {/* <Option value="OTHER">Other</Option> */}
             </Select>
           </Form.Item>
           <Form.Item
@@ -246,13 +246,13 @@ const OnboardingForm: React.FC = () => {
           >
             <Input className="rounded-md border-[#a9a7a7]" />
           </Form.Item>
-          <Form.Item
+          {/* <Form.Item
             name="phoneNumber"
             label="Phone Number"
             rules={[{ required: true, message: 'Please input your phone number!' }]}
           >
-            <Input className="rounded-md border-[#a9a7a7]" />
-          </Form.Item>
+            <Input className="rounded-md border-[#a9a7a7]" disabled/>
+          </Form.Item> */}
           <Form.Item
             name="universityAttended"
             label="University Attended"

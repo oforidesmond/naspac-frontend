@@ -7,6 +7,9 @@ import { saveAs } from 'file-saver';
 import { useAuth } from '../AuthContext';
 import '../components/PersonnelSelection.css';
 
+const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const getAbsoluteUrl = (url: string) => (url && url.startsWith('http') ? url : `${apiBase}${url || ''}`);
+
 const { Option } = Select;
 const { Text } = Typography;
 
@@ -187,7 +190,8 @@ const Endorsement: React.FC = () => {
   // Handle download
   const handleDownload = () => {
     if (modalContent?.url) {
-      window.open(modalContent.url, '_blank');
+      const fileUrl = getAbsoluteUrl(modalContent.url);
+      window.open(fileUrl, '_blank');
     }
   };
 
@@ -494,7 +498,7 @@ const Endorsement: React.FC = () => {
         >
           {modalContent?.url && (
             <iframe
-              src={modalContent.url}
+              src={getAbsoluteUrl(modalContent.url)}
               style={{ width: '100%', height: '80vh', border: 'none' }}
               title={modalContent.type}
             />

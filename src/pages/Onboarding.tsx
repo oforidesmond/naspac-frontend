@@ -12,6 +12,7 @@ import Carousel from "../components/Carousel";
 const Onboarding: React.FC = () => {
   const [nssNumber, setNssNumber] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState(""); // New state for phone number
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
@@ -37,9 +38,9 @@ const Onboarding: React.FC = () => {
 
     const preventShortcuts = (e: KeyboardEvent) => {
       if (
-        e.ctrlKey || 
+        e.ctrlKey ||
         e.altKey ||
-        ["F12", "Escape"].includes(e.key) || 
+        ["F12", "Escape"].includes(e.key) ||
         (e.metaKey && ["t", "n", "r"].includes(e.key.toLowerCase()))
       ) {
         e.preventDefault();
@@ -57,7 +58,15 @@ const Onboarding: React.FC = () => {
     };
   }, []);
 
-  const images: string[] = ["/carousel-image-1.jpg", "/carousel-image-2.jpg", "/carousel-image-3.jpg", "/carousel-image-4.png", "/carousel-image-5.jpg", "/carousel-image-6.jpg", "/carousel-image-7.jpg"];
+  const images: string[] = [
+    "/carousel-image-1.jpg",
+    "/carousel-image-2.jpg",
+    "/carousel-image-3.jpg",
+    "/carousel-image-4.png",
+    "/carousel-image-5.jpg",
+    "/carousel-image-6.jpg",
+    "/carousel-image-7.jpg",
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +82,15 @@ const Onboarding: React.FC = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       toast.error("Please enter a valid email address", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    const phoneRegex = /^\+?\d{10,15}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      toast.error("Please enter a valid phone number (10-15 digits, optional +)", {
         position: "top-right",
         autoClose: 3000,
       });
@@ -99,7 +117,7 @@ const Onboarding: React.FC = () => {
       const token = localStorage.getItem("token");
       const response = await axios.post(
         "http://localhost:3000/auth/init-onboarding",
-        { nssNumber, email },
+        { nssNumber, email, phoneNumber }, // Include phoneNumber in the payload
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -114,6 +132,7 @@ const Onboarding: React.FC = () => {
 
       setNssNumber("");
       setEmail("");
+      setPhoneNumber(""); // Clear phone number field
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Failed to initiate onboarding. Please try again.";
@@ -214,6 +233,29 @@ const Onboarding: React.FC = () => {
                 </svg>
               }
             />
+            <Input
+              className="text-black font-normal"
+              placeholder="Phone Number*"
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              icon={
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c838d]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                  />
+                </svg>
+              }
+            />
             <Button className="cursor-pointer" type="submit" disabled={isLoading}>
               {isLoading ? "Submitting..." : "Submit"}
             </Button>
@@ -229,8 +271,11 @@ const Onboarding: React.FC = () => {
             <p className="text-black mb-2">
               <strong>NSS Number:</strong> {nssNumber}
             </p>
-            <p className="text-black mb-6">
+            <p className="text-black mb-2">
               <strong>Email:</strong> {email}
+            </p>
+            <p className="text-black mb-6">
+              <strong>Phone Number:</strong> {phoneNumber}
             </p>
             <p className="text-black mb-6">
               Are you sure you want to proceed with these details?
