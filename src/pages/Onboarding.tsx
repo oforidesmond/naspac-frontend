@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import Card from "../components/Card";
-import CardContent from "../components/CardContent";
-import Input from "../components/Input";
-import Button from "../components/Button";
-import Carousel from "../components/Carousel";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Card from '../components/Card';
+import CardContent from '../components/CardContent';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import Carousel from '../components/Carousel';
 
 const Onboarding: React.FC = () => {
-  const [nssNumber, setNssNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState(""); // New state for phone number
+  const [nssNumber, setNssNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(''); // New state for phone number
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
@@ -21,59 +21,61 @@ const Onboarding: React.FC = () => {
     const goFullScreen = () => {
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch((err) => {
-          console.log("Fullscreen request failed:", err);
+          console.log('Fullscreen request failed:', err);
         });
       }
     };
     goFullScreen();
 
     const trapNavigation = () => {
-      window.history.pushState(null, "", window.location.href);
+      window.history.pushState(null, '', window.location.href);
     };
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", trapNavigation);
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', trapNavigation);
 
     const preventContextMenu = (e: Event) => e.preventDefault();
-    document.addEventListener("contextmenu", preventContextMenu);
+    document.addEventListener('contextmenu', preventContextMenu);
 
     const preventShortcuts = (e: KeyboardEvent) => {
       if (
         e.ctrlKey ||
         e.altKey ||
-        ["F12", "Escape"].includes(e.key) ||
-        (e.metaKey && ["t", "n", "r"].includes(e.key.toLowerCase()))
+        ['F12', 'Escape'].includes(e.key) ||
+        (e.metaKey && ['t', 'n', 'r'].includes(e.key.toLowerCase()))
       ) {
         e.preventDefault();
       }
     };
-    document.addEventListener("keydown", preventShortcuts);
+    document.addEventListener('keydown', preventShortcuts);
 
     return () => {
-      window.removeEventListener("popstate", trapNavigation);
-      document.removeEventListener("contextmenu", preventContextMenu);
-      document.removeEventListener("keydown", preventShortcuts);
+      window.removeEventListener('popstate', trapNavigation);
+      document.removeEventListener('contextmenu', preventContextMenu);
+      document.removeEventListener('keydown', preventShortcuts);
       if (document.fullscreenElement) {
-        document.exitFullscreen().catch((err) => console.log("Exit fullscreen failed:", err));
+        document
+          .exitFullscreen()
+          .catch((err) => console.log('Exit fullscreen failed:', err));
       }
     };
   }, []);
 
   const images: string[] = [
-    "/carousel-image-1.jpg",
-    "/carousel-image-2.jpg",
-    "/carousel-image-3.jpg",
-    "/carousel-image-4.png",
-    "/carousel-image-5.jpg",
-    "/carousel-image-6.jpg",
-    "/carousel-image-7.jpg",
+    '/carousel-image-1.jpg',
+    '/carousel-image-2.jpg',
+    '/carousel-image-3.jpg',
+    '/carousel-image-4.png',
+    '/carousel-image-5.jpg',
+    '/carousel-image-6.jpg',
+    '/carousel-image-7.jpg',
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!nssNumber.trim()) {
-      toast.error("Please enter an NSS Number", {
-        position: "top-right",
+      toast.error('Please enter an NSS Number', {
+        position: 'top-right',
         autoClose: 3000,
       });
       return;
@@ -81,8 +83,8 @@ const Onboarding: React.FC = () => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast.error("Please enter a valid email address", {
-        position: "top-right",
+      toast.error('Please enter a valid email address', {
+        position: 'top-right',
         autoClose: 3000,
       });
       return;
@@ -90,20 +92,23 @@ const Onboarding: React.FC = () => {
 
     const phoneRegex = /^\+?\d{10,15}$/;
     if (!phoneRegex.test(phoneNumber)) {
-      toast.error("Please enter a valid phone number (10-15 digits, optional +)", {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      toast.error(
+        'Please enter a valid phone number (10-15 digits, optional +)',
+        {
+          position: 'top-right',
+          autoClose: 3000,
+        }
+      );
       return;
     }
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (!token) {
-      toast.error("You must be logged in to initiate onboarding", {
-        position: "top-right",
+      toast.error('You must be logged in to initiate onboarding', {
+        position: 'top-right',
         autoClose: 3000,
       });
-      navigate("/staff-login");
+      navigate('/staff-login');
       return;
     }
     setShowModal(true);
@@ -114,9 +119,10 @@ const Onboarding: React.FC = () => {
     setShowModal(false);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
+      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
       const response = await axios.post(
-        "http://localhost:3000/auth/init-onboarding",
+        `${apiBase}/auth/init-onboarding`,
         { nssNumber, email, phoneNumber }, // Include phoneNumber in the payload
         {
           headers: {
@@ -125,28 +131,32 @@ const Onboarding: React.FC = () => {
         }
       );
 
-      toast.success(response.data.message || "Onboarding link sent successfully!", {
-        position: "top-right",
-        autoClose: 2000,
-      });
+      toast.success(
+        response.data.message || 'Onboarding link sent successfully!',
+        {
+          position: 'top-right',
+          autoClose: 2000,
+        }
+      );
 
-      setNssNumber("");
-      setEmail("");
-      setPhoneNumber(""); // Clear phone number field
+      setNssNumber('');
+      setEmail('');
+      setPhoneNumber(''); // Clear phone number field
     } catch (error: any) {
       const errorMessage =
-        error.response?.data?.message || "Failed to initiate onboarding. Please try again.";
+        error.response?.data?.message ||
+        'Failed to initiate onboarding. Please try again.';
       toast.error(errorMessage, {
-        position: "top-right",
+        position: 'top-right',
         autoClose: 3000,
       });
 
       if (error.response?.status === 401) {
-        toast.error("Session expired. Please log in again.", {
-          position: "top-right",
+        toast.error('Session expired. Please log in again.', {
+          position: 'top-right',
           autoClose: 3000,
         });
-        localStorage.removeItem("token");
+        localStorage.removeItem('token');
       }
     } finally {
       setIsLoading(false);
@@ -180,7 +190,10 @@ const Onboarding: React.FC = () => {
               Onboarding
             </h1>
           </div>
-          <form className="flex flex-col gap-3 sm:gap-4 md:gap-5" onSubmit={handleSubmit}>
+          <form
+            className="flex flex-col gap-3 sm:gap-4 md:gap-5"
+            onSubmit={handleSubmit}
+          >
             <Input
               className="text-black font-normal"
               placeholder="NSS Number*"
@@ -256,8 +269,12 @@ const Onboarding: React.FC = () => {
                 </svg>
               }
             />
-            <Button className="cursor-pointer" type="submit" disabled={isLoading}>
-              {isLoading ? "Submitting..." : "Submit"}
+            <Button
+              className="cursor-pointer"
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Submitting...' : 'Submit'}
             </Button>
           </form>
         </CardContent>
@@ -292,7 +309,7 @@ const Onboarding: React.FC = () => {
                 onClick={handleConfirm}
                 disabled={isLoading}
               >
-                {isLoading ? "Submitting..." : "Confirm"}
+                {isLoading ? 'Submitting...' : 'Confirm'}
               </button>
             </div>
           </div>

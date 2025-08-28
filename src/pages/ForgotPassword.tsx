@@ -1,36 +1,44 @@
-import React, { useState } from "react";
-import Card from "../components/Card";
-import CardContent from "../components/CardContent";
-import Input from "../components/Input";
-import Button from "../components/Button";
-import Carousel from "../components/Carousel";
-import { toast, ToastContainer } from "react-toastify";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import Card from '../components/Card';
+import CardContent from '../components/CardContent';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import Carousel from '../components/Carousel';
+import { toast, ToastContainer } from 'react-toastify';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const ForgotPassword: React.FC = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   // Define carousel images
-   const images: string[] = ["/carousel-image-1.jpg", "/carousel-image-2.jpg", "/carousel-image-3.jpg", "/carousel-image-4.png", "/carousel-image-5.jpg", "/carousel-image-6.jpg", "/carousel-image-7.jpg"];
-   
+  const images: string[] = [
+    '/carousel-image-1.jpg',
+    '/carousel-image-2.jpg',
+    '/carousel-image-3.jpg',
+    '/carousel-image-4.png',
+    '/carousel-image-5.jpg',
+    '/carousel-image-6.jpg',
+    '/carousel-image-7.jpg',
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email.trim()) {
-      toast.error("Please enter an email address", {
-        position: "top-right",
+      toast.error('Please enter an email address', {
+        position: 'top-right',
         autoClose: 3000,
       });
       return;
     }
 
-     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast.error("Please enter a valid email address", {
-        position: "top-right",
+      toast.error('Please enter a valid email address', {
+        position: 'top-right',
         autoClose: 3000,
       });
       return;
@@ -38,23 +46,29 @@ const ForgotPassword: React.FC = () => {
 
     setIsLoading(true);
 
-     try {
+    try {
+      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
       const response = await axios.post(
-        "http://localhost:3000/auth/request-forgot-password",
+        `${apiBase}/auth/request-forgot-password`,
         { email }
       );
 
-      toast.success(response.data.message || "If an account exists, a reset link will be sent", {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      toast.success(
+        response.data.message ||
+          'If an account exists, a reset link will be sent',
+        {
+          position: 'top-right',
+          autoClose: 3000,
+        }
+      );
 
       setTimeout(() => navigate(-1), 3000);
-      } catch (error: any) {
+    } catch (error: any) {
       const errorMessage =
-        error.response?.data?.message || "Failed to send reset link. Please try again.";
+        error.response?.data?.message ||
+        'Failed to send reset link. Please try again.';
       toast.error(errorMessage, {
-        position: "top-right",
+        position: 'top-right',
         autoClose: 3000,
       });
     } finally {
@@ -95,41 +109,48 @@ const ForgotPassword: React.FC = () => {
           </div>
 
           {/* Login Form */}
-          <form className="flex flex-col gap-3 sm:gap-4 md:gap-5"onSubmit={handleSubmit}>
+          <form
+            className="flex flex-col gap-3 sm:gap-4 md:gap-5"
+            onSubmit={handleSubmit}
+          >
             <Input
-            className="text-black font-normal"
+              className="text-black font-normal"
               placeholder="Email*"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               icon={
-            <svg
-              className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c838d]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 4H8a4 4 0 00-4 4v8a4 4 0 004 4h8a4 4 0 004-4V8a4 4 0 00-4-4z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M22 6l-10 7L2 6"
-              />
-            </svg>
-          }
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c838d]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 4H8a4 4 0 00-4 4v8a4 4 0 004 4h8a4 4 0 004-4V8a4 4 0 00-4-4z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M22 6l-10 7L2 6"
+                  />
+                </svg>
+              }
             />
-            <Button className="cursor-pointer" type="submit" disabled={isLoading}>
-              {isLoading ? "Sending..." : "Send Email"}
+            <Button
+              className="cursor-pointer"
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Sending...' : 'Send Email'}
             </Button>
-             <div className="text-right">
-               <a
+            <div className="text-right">
+              <a
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();

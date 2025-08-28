@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Select, Button, Upload, Typography, AutoComplete } from 'antd';
+import {
+  Form,
+  Input,
+  Select,
+  Button,
+  Upload,
+  Typography,
+  AutoComplete,
+} from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -40,7 +48,11 @@ const OnboardingForm: React.FC = () => {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         // console.log('JWT Payload:', payload);
-        form.setFieldsValue({ nssNumber: payload.identifier, email: payload.email || '', phoneNumber: payload.phoneNumber || '' });
+        form.setFieldsValue({
+          nssNumber: payload.identifier,
+          email: payload.email || '',
+          phoneNumber: payload.phoneNumber || '',
+        });
       } catch (error) {
         // console.error('Failed to decode JWT:', error);
         toast.error('Failed to load user data');
@@ -52,7 +64,9 @@ const OnboardingForm: React.FC = () => {
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
-        const response = await fetch('http://localhost:3000/users/ghana-universities', {
+        const apiBase =
+          import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${apiBase}/users/ghana-universities`, {
           headers: { 'Content-Type': 'application/json' },
         });
         const data = await response.json();
@@ -65,7 +79,7 @@ const OnboardingForm: React.FC = () => {
     fetchUniversities();
   }, []);
 
-    // Check onboarding status on page load
+  // Check onboarding status on page load
   useEffect(() => {
     const checkStatusOnLoad = async () => {
       try {
@@ -75,7 +89,9 @@ const OnboardingForm: React.FC = () => {
           navigate('/login'); // Redirect to login if no token
           return;
         }
-        const response = await fetch('http://localhost:3000/users/onboarding-status', {
+        const apiBase =
+          import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${apiBase}/users/onboarding-status`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -94,7 +110,9 @@ const OnboardingForm: React.FC = () => {
         }
       } catch (error) {
         // console.error('Error checking onboarding status:', error);
-        toast.error('Failed to verify onboarding status. Submission is not allowed.');
+        toast.error(
+          'Failed to verify onboarding status. Submission is not allowed.'
+        );
         setCanSubmit(false);
         navigate('/login');
       }
@@ -113,11 +131,12 @@ const OnboardingForm: React.FC = () => {
     );
   }
 
-   // Check onboarding status
+  // Check onboarding status
   const checkOnboardingStatus = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/users/onboarding-status', {
+      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiBase}/users/onboarding-status`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +156,7 @@ const OnboardingForm: React.FC = () => {
   };
 
   const onFinish = async (values: any) => {
-     const hasSubmitted = await checkOnboardingStatus();
+    const hasSubmitted = await checkOnboardingStatus();
     if (hasSubmitted) {
       toast.error('Already submitted.');
       return;
@@ -158,18 +177,19 @@ const OnboardingForm: React.FC = () => {
     formData.append('divisionPostedTo', values.divisionPostedTo);
 
     if (values.postingLetter) {
-    formData.append('files', values.postingLetter, 'postingLetter');
-  } else {
-    console.log('No postingLetter file found');
-  }
-   if (values.appointmentLetter) {
-    formData.append('files', values.appointmentLetter, 'appointmentLetter');
-  } else {
-    console.log('No appointmentLetter file found');
-  }
+      formData.append('files', values.postingLetter, 'postingLetter');
+    } else {
+      console.log('No postingLetter file found');
+    }
+    if (values.appointmentLetter) {
+      formData.append('files', values.appointmentLetter, 'appointmentLetter');
+    } else {
+      console.log('No appointmentLetter file found');
+    }
 
     try {
-      const response = await fetch('http://localhost:3000/users/submit-onboarding', {
+      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiBase}/users/submit-onboarding`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -183,11 +203,11 @@ const OnboardingForm: React.FC = () => {
         toast.success('Submitted successfully!');
         navigate('/');
       } else {
-         console.error('Server response:', data);
+        console.error('Server response:', data);
         toast.error(data.message || 'Failed to submit');
       }
     } catch (error) {
-          console.error('Submission error:', error);
+      console.error('Submission error:', error);
       toast.error('Submission failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -210,21 +230,31 @@ const OnboardingForm: React.FC = () => {
           <Form.Item
             name="fullName"
             label="Full Name"
-            rules={[{ required: true, message: 'Please input your full name!' }]}
+            rules={[
+              { required: true, message: 'Please input your full name!' },
+            ]}
           >
             <Input className="rounded-md border-[#a9a7a7]" />
           </Form.Item>
           <Form.Item
             name="nssNumber"
             label="NSS Number"
-            rules={[{ required: true, message: 'Please input your NSS number!' }]}
+            rules={[
+              { required: true, message: 'Please input your NSS number!' },
+            ]}
           >
             <Input className="rounded-md border-[#a9a7a7]" disabled />
           </Form.Item>
           <Form.Item
             name="email"
             label="Email"
-            rules={[{ required: true, type: 'email', message: 'Please input a valid email!' }]}
+            rules={[
+              {
+                required: true,
+                type: 'email',
+                message: 'Please input a valid email!',
+              },
+            ]}
           >
             <Input className="rounded-md border-[#a9a7a7]" />
           </Form.Item>
@@ -242,7 +272,12 @@ const OnboardingForm: React.FC = () => {
           <Form.Item
             name="placeOfResidence"
             label="Place of Residence"
-            rules={[{ required: true, message: 'Please input your place of residence!' }]}
+            rules={[
+              {
+                required: true,
+                message: 'Please input your place of residence!',
+              },
+            ]}
           >
             <Input className="rounded-md border-[#a9a7a7]" />
           </Form.Item>
@@ -256,7 +291,12 @@ const OnboardingForm: React.FC = () => {
           <Form.Item
             name="universityAttended"
             label="University Attended"
-            rules={[{ required: true, message: 'Please select or input your university!' }]}
+            rules={[
+              {
+                required: true,
+                message: 'Please select or input your university!',
+              },
+            ]}
           >
             <AutoComplete
               className="rounded-md w-full"
@@ -272,7 +312,9 @@ const OnboardingForm: React.FC = () => {
           <Form.Item
             name="regionOfSchool"
             label="Region of School"
-            rules={[{ required: true, message: 'Please select or input the region!' }]}
+            rules={[
+              { required: true, message: 'Please select or input the region!' },
+            ]}
           >
             <AutoComplete
               className="rounded-md w-full"
@@ -300,22 +342,27 @@ const OnboardingForm: React.FC = () => {
               }
             />
           </Form.Item>
-        <Form.Item
-          name="yearOfNss"
-          label="Year of NSS"
-          initialValue={new Date().getFullYear()}
-          rules={[{ required: true, message: 'Please input the NSS year!' }]}
-        >
-          <Input
-            type="number"
-            disabled
-            className="rounded-md border-[#a9a7a7]"
-          />
-        </Form.Item>
+          <Form.Item
+            name="yearOfNss"
+            label="Year of NSS"
+            initialValue={new Date().getFullYear()}
+            rules={[{ required: true, message: 'Please input the NSS year!' }]}
+          >
+            <Input
+              type="number"
+              disabled
+              className="rounded-md border-[#a9a7a7]"
+            />
+          </Form.Item>
           <Form.Item
             name="programStudied"
             label="Program Studied"
-            rules={[{ required: true, message: 'Please select or input your program studied!' }]}
+            rules={[
+              {
+                required: true,
+                message: 'Please select or input your program studied!',
+              },
+            ]}
           >
             <AutoComplete
               className="rounded-md w-full"
@@ -331,7 +378,12 @@ const OnboardingForm: React.FC = () => {
           <Form.Item
             name="divisionPostedTo"
             label="Division Posted To"
-            rules={[{ required: true, message: 'Please input your division posted to!' }]}
+            rules={[
+              {
+                required: true,
+                message: 'Please input your division posted to!',
+              },
+            ]}
           >
             <Input className="rounded-md border-[#a9a7a7]" />
           </Form.Item>
@@ -341,7 +393,12 @@ const OnboardingForm: React.FC = () => {
               label="Posting Letter (PDF)"
               valuePropName="file"
               getValueFromEvent={(e) => e?.file}
-              rules={[{ required: true, message: 'Please upload your posting letter!' }]}
+              rules={[
+                {
+                  required: true,
+                  message: 'Please upload your posting letter!',
+                },
+              ]}
               className="flex-1"
             >
               <Upload
@@ -363,7 +420,12 @@ const OnboardingForm: React.FC = () => {
               label="Appointment Letter (PDF)"
               valuePropName="file"
               getValueFromEvent={(e) => e?.file}
-              rules={[{ required: true, message: 'Please upload your appointment letter!' }]}
+              rules={[
+                {
+                  required: true,
+                  message: 'Please upload your appointment letter!',
+                },
+              ]}
               className="flex-1"
             >
               <Upload

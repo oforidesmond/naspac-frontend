@@ -52,7 +52,8 @@ const PersonnelLogin: React.FC = () => {
 
   const checkOnboardingStatus = async (token: string) => {
     try {
-      const response = await fetch('http://localhost:3000/users/onboarding-status', {
+      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiBase}/users/onboarding-status`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -88,7 +89,8 @@ const PersonnelLogin: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/auth/login-personnel', {
+      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiBase}/auth/login-personnel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nssNumber, password }),
@@ -143,7 +145,8 @@ const PersonnelLogin: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/auth/verifyTfa', {
+      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiBase}/auth/verifyTfa`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,16 +202,20 @@ const PersonnelLogin: React.FC = () => {
     }
 
     if (resendCooldown > 0) {
-      toast.info(`Please wait ${resendCooldown} seconds before resending OTP.`, {
-        position: 'top-right',
-        autoClose: 3000,
-      });
+      toast.info(
+        `Please wait ${resendCooldown} seconds before resending OTP.`,
+        {
+          position: 'top-right',
+          autoClose: 3000,
+        }
+      );
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/auth/resendTfa', {
+      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiBase}/auth/resendTfa`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -301,18 +308,30 @@ const PersonnelLogin: React.FC = () => {
                   type="text"
                   value={tfaToken}
                   onChange={(e) => setTfaToken(e.target.value)}
-                  icon={<SafetyOutlined className="w-4 h-4 sm:w-5 sm:h-5 !text-[#7c838d]" />}
+                  icon={
+                    <SafetyOutlined className="w-4 h-4 sm:w-5 sm:h-5 !text-[#7c838d]" />
+                  }
                 />
                 <div className="text-right">
                   <button
                     type="button"
                     onClick={handleResendOTP}
                     className={`font-['Poppins',Helvetica] text-xs sm:text-sm text-[#5b3418] hover:underline cursor-pointer ${
-                      isLoading || resendCooldown > 0 || resendAttempts >= MAX_RESEND_ATTEMPTS ? 'opacity-50 cursor-not-allowed' : ''
+                      isLoading ||
+                      resendCooldown > 0 ||
+                      resendAttempts >= MAX_RESEND_ATTEMPTS
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
                     }`}
-                    disabled={isLoading || resendCooldown > 0 || resendAttempts >= MAX_RESEND_ATTEMPTS}
+                    disabled={
+                      isLoading ||
+                      resendCooldown > 0 ||
+                      resendAttempts >= MAX_RESEND_ATTEMPTS
+                    }
                   >
-                    {resendCooldown > 0 ? `Resend OTP (${resendCooldown}s)` : 'Resend OTP'}
+                    {resendCooldown > 0
+                      ? `Resend OTP (${resendCooldown}s)`
+                      : 'Resend OTP'}
                   </button>
                 </div>
               </>
@@ -419,8 +438,16 @@ const PersonnelLogin: React.FC = () => {
                 </div>
               </>
             )}
-            <Button className="cursor-pointer" type="submit" disabled={isLoading}>
-              {isLoading ? 'Processing...' : is2FAStep ? 'Verify OTP' : 'Sign In'}
+            <Button
+              className="cursor-pointer"
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading
+                ? 'Processing...'
+                : is2FAStep
+                ? 'Verify OTP'
+                : 'Sign In'}
             </Button>
           </form>
         </CardContent>

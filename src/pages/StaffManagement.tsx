@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, Button, Typography, Modal, Form, Input, Space } from 'antd';
+import {
+  Table,
+  Select,
+  Button,
+  Typography,
+  Modal,
+  Form,
+  Input,
+  Space,
+} from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import { useAuth } from '../AuthContext';
@@ -37,7 +46,7 @@ const StaffManagement: React.FC = () => {
   const [editForm] = Form.useForm();
 
   // Define API base URL
-  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -75,7 +84,13 @@ const StaffManagement: React.FC = () => {
     setFilteredStaffList(filtered);
   }, [roleFilter, staffList]);
 
-  const handleCreateUser = async (values: { staffId: string; name: string; email: string; phoneNumber: string; role: string }) => {
+  const handleCreateUser = async (values: {
+    staffId: string;
+    name: string;
+    email: string;
+    phoneNumber: string;
+    role: string;
+  }) => {
     setLoading(true);
     try {
       const response = await fetch(`${apiBase}/auth/init-user`, {
@@ -88,8 +103,14 @@ const StaffManagement: React.FC = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setStaffList((prev) => [...prev, { ...data, departmentsSupervised: [] }]);
-        setFilteredStaffList((prev) => [...prev, { ...data, departmentsSupervised: [] }]);
+        setStaffList((prev) => [
+          ...prev,
+          { ...data, departmentsSupervised: [] },
+        ]);
+        setFilteredStaffList((prev) => [
+          ...prev,
+          { ...data, departmentsSupervised: [] },
+        ]);
         setCreateModalVisible(false);
         form.resetFields();
         toast.success('User created successfully');
@@ -104,19 +125,28 @@ const StaffManagement: React.FC = () => {
     }
   };
 
-  const handleUpdateUser = async (values: { staffId: string; name: string; email: string; phoneNumber: string; role: string }) => {
+  const handleUpdateUser = async (values: {
+    staffId: string;
+    name: string;
+    email: string;
+    phoneNumber: string;
+    role: string;
+  }) => {
     if (!selectedStaff) return;
 
     setLoading(true);
     try {
-      const response = await fetch(`${apiBase}/users/staff/${selectedStaff.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(values),
-      });
+      const response = await fetch(
+        `${apiBase}/users/staff/${selectedStaff.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(values),
+        }
+      );
       const data = await response.json();
       if (response.ok) {
         setStaffList((prev) =>
@@ -147,16 +177,23 @@ const StaffManagement: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${apiBase}/users/staff/${selectedStaff.id}/delete`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await fetch(
+        `${apiBase}/users/staff/${selectedStaff.id}/delete`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
       if (response.ok) {
-        setStaffList((prev) => prev.filter((staff) => staff.id !== selectedStaff.id));
-        setFilteredStaffList((prev) => prev.filter((staff) => staff.id !== selectedStaff.id));
+        setStaffList((prev) =>
+          prev.filter((staff) => staff.id !== selectedStaff.id)
+        );
+        setFilteredStaffList((prev) =>
+          prev.filter((staff) => staff.id !== selectedStaff.id)
+        );
         setEditModalVisible(false);
         setConfirmDeleteVisible(false);
         toast.success('User deleted successfully');
@@ -258,7 +295,9 @@ const StaffManagement: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen px-2 py-4">
       <div className="w-full max-w-full mx-auto">
-        <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">Staff Management</h2>
+        <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">
+          Staff Management
+        </h2>
         <div className="flex flex-col sm:flex-row justify-between mb-3 gap-2">
           <Space>
             <Button
@@ -340,7 +379,8 @@ const StaffManagement: React.FC = () => {
                 { required: true, message: 'Please enter phone number' },
                 {
                   pattern: /^\+?\d{10,15}$/,
-                  message: 'Please enter a valid phone number (10-15 digits, optional +)',
+                  message:
+                    'Please enter a valid phone number (10-15 digits, optional +)',
                 },
               ]}
             >
@@ -429,7 +469,8 @@ const StaffManagement: React.FC = () => {
                 { required: true, message: 'Please enter phone number' },
                 {
                   pattern: /^\+?\d{10,15}$/,
-                  message: 'Please enter a valid phone number (10-15 digits, optional +)',
+                  message:
+                    'Please enter a valid phone number (10-15 digits, optional +)',
                 },
               ]}
             >
@@ -488,11 +529,18 @@ const StaffManagement: React.FC = () => {
           onOk={handleDeleteUser}
           onCancel={() => setConfirmDeleteVisible(false)}
           okText="Delete"
-          okButtonProps={{ danger: true, className: '!bg-[#b95a5a]', loading: loading }}
+          okButtonProps={{
+            danger: true,
+            className: '!bg-[#b95a5a]',
+            loading: loading,
+          }}
           cancelButtonProps={{ disabled: loading, className: '!bg-[#999696]' }}
           className="centered-modal"
         >
-          <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+          <p>
+            Are you sure you want to delete this user? This action cannot be
+            undone.
+          </p>
         </Modal>
       </div>
     </div>

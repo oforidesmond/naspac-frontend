@@ -1,14 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Select, Input, Button, Typography, Space, Modal, Tooltip, Checkbox } from 'antd';
-import { SearchOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
+import {
+  Table,
+  Select,
+  Input,
+  Button,
+  Typography,
+  Space,
+  Modal,
+  Tooltip,
+  Checkbox,
+} from 'antd';
+import {
+  SearchOutlined,
+  DownloadOutlined,
+  EyeOutlined,
+} from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { useAuth } from '../AuthContext';
 import '../components/PersonnelSelection.css';
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-const getAbsoluteUrl = (url: string) => (url && url.startsWith('http') ? url : `${apiBase}${url || ''}`);
+const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+const getAbsoluteUrl = (url: string) =>
+  url && url.startsWith('http') ? url : `${apiBase}${url || ''}`;
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -37,12 +52,18 @@ interface Submission {
 const Endorsement: React.FC = () => {
   const { role } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>([]);
+  const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>(
+    []
+  );
   const [statusFilter, setStatusFilter] = useState<string>('ENDORSED');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalContent, setModalContent] = useState<{ url: string; type: string; id?: number } | null>(null);
+  const [modalContent, setModalContent] = useState<{
+    url: string;
+    type: string;
+    id?: number;
+  } | null>(null);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [shortlistModalVisible, setShortlistModalVisible] = useState(false);
   const [validatedCount, setValidatedCount] = useState<number>(0);
@@ -50,16 +71,19 @@ const Endorsement: React.FC = () => {
   useEffect(() => {
     const fetchValidatedCount = async () => {
       try {
-        const response = await fetch('http://localhost:3000/users/submission-status-counts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({
-            statuses: ['VALIDATED', 'COMPLETED'],
-          }),
-        });
+        const response = await fetch(
+          `${apiBase}/users/submission-status-counts`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({
+              statuses: ['VALIDATED', 'COMPLETED'],
+            }),
+          }
+        );
         const data = await response.json();
         if (response.ok) {
           setValidatedCount((data.VALIDATED || 0) + (data.COMPLETED || 0));
@@ -70,68 +94,72 @@ const Endorsement: React.FC = () => {
         toast.error('Failed to load validated count');
       }
     };
-   if (role && ['ADMIN', 'STAFF'].includes(role)) {
-    fetchValidatedCount();
+    if (role && ['ADMIN', 'STAFF'].includes(role)) {
+      fetchValidatedCount();
     }
   }, [role]);
 
   // Fetch submissions
   useEffect(() => {
-  const fetchSubmissions = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('http://localhost:3000/users/submissions', {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const data: Submission[] = await response.json();
-      if (response.ok) {
-        // Filter for ENDORSED, VALIDATED, and COMPLETED status
-        const filteredSubmissions = data.filter((s) => ['ENDORSED', 'VALIDATED', 'COMPLETED'].includes(s.status));
-        setSubmissions(filteredSubmissions);
-        setFilteredSubmissions(statusFilter === 'All' 
-          ? filteredSubmissions 
-          : filteredSubmissions.filter((s) => 
-              statusFilter === 'VALIDATED' 
-                ? ['VALIDATED', 'COMPLETED'].includes(s.status)
-                : s.status === statusFilter
-            ));
-      } else {
-        toast.error((data as any).message || 'Failed to load submissions');
+    const fetchSubmissions = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${apiBase}/users/submissions`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        const data: Submission[] = await response.json();
+        if (response.ok) {
+          // Filter for ENDORSED, VALIDATED, and COMPLETED status
+          const filteredSubmissions = data.filter((s) =>
+            ['ENDORSED', 'VALIDATED', 'COMPLETED'].includes(s.status)
+          );
+          setSubmissions(filteredSubmissions);
+          setFilteredSubmissions(
+            statusFilter === 'All'
+              ? filteredSubmissions
+              : filteredSubmissions.filter((s) =>
+                  statusFilter === 'VALIDATED'
+                    ? ['VALIDATED', 'COMPLETED'].includes(s.status)
+                    : s.status === statusFilter
+                )
+          );
+        } else {
+          toast.error((data as any).message || 'Failed to load submissions');
+        }
+      } catch (error) {
+        toast.error('Failed to load submissions');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      toast.error('Failed to load submissions');
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchSubmissions();
-}, []);
+    };
+    fetchSubmissions();
+  }, []);
 
   useEffect(() => {
-  let filtered = submissions;
-  if (statusFilter !== 'All') {
-    filtered = filtered.filter((s) => 
-      statusFilter === 'VALIDATED' 
-        ? ['VALIDATED', 'COMPLETED'].includes(s.status)
-        : s.status === statusFilter
-    );
-  }
-  if (searchTerm) {
-    const lowerSearch = searchTerm.toLowerCase();
-    filtered = filtered.filter(
-      (s) =>
-        s.fullName.toLowerCase().includes(lowerSearch) ||
-        s.nssNumber.toLowerCase().includes(lowerSearch) ||
-        s.email.toLowerCase().includes(lowerSearch) ||
-        s.universityAttended.toLowerCase().includes(lowerSearch),
-    );
-  }
-  setFilteredSubmissions(filtered);
-  setSelectedRows([]);
-}, [statusFilter, searchTerm, submissions]);
+    let filtered = submissions;
+    if (statusFilter !== 'All') {
+      filtered = filtered.filter((s) =>
+        statusFilter === 'VALIDATED'
+          ? ['VALIDATED', 'COMPLETED'].includes(s.status)
+          : s.status === statusFilter
+      );
+    }
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (s) =>
+          s.fullName.toLowerCase().includes(lowerSearch) ||
+          s.nssNumber.toLowerCase().includes(lowerSearch) ||
+          s.email.toLowerCase().includes(lowerSearch) ||
+          s.universityAttended.toLowerCase().includes(lowerSearch)
+      );
+    }
+    setFilteredSubmissions(filtered);
+    setSelectedRows([]);
+  }, [statusFilter, searchTerm, submissions]);
 
   // Selection handlers
   const handleSelectAll = () => {
@@ -150,9 +178,10 @@ const Endorsement: React.FC = () => {
 
   // Export to Excel
   const exportToExcel = () => {
-    const exportData = (selectedRows.length > 0
-      ? filteredSubmissions.filter((s) => selectedRows.includes(s.id))
-      : filteredSubmissions
+    const exportData = (
+      selectedRows.length > 0
+        ? filteredSubmissions.filter((s) => selectedRows.includes(s.id))
+        : filteredSubmissions
     ).map((s) => ({
       ID: s.id,
       'Full Name': s.fullName,
@@ -175,14 +204,17 @@ const Endorsement: React.FC = () => {
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Submissions');
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
     saveAs(blob, 'personnel_submissions.xlsx');
   };
 
   // Handle letter view
   const showLetter = (url: string, type: string, id?: number) => {
-     console.log('Showing letter:', { url, type, id });
+    console.log('Showing letter:', { url, type, id });
     setModalContent({ url, type, id });
     setModalVisible(true);
   };
@@ -196,76 +228,92 @@ const Endorsement: React.FC = () => {
   };
 
   // Handle validate action
- const handleValidate = async () => {
-  if (!modalContent?.id) return;
-   console.log('Validating submission:', modalContent.id);
-  setLoading(true);
-  try {
-    const response = await fetch(`http://localhost:3000/users/update-submission-status/${modalContent.id}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify({
-       status: 'VALIDATED',
-      }),
-    });
-    if (response.ok) {
-      // Update local state
-      setSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
-        setFilteredSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
+  const handleValidate = async () => {
+    if (!modalContent?.id) return;
+    console.log('Validating submission:', modalContent.id);
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${apiBase}/users/update-submission-status/${modalContent.id}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            status: 'VALIDATED',
+          }),
+        }
+      );
+      if (response.ok) {
+        // Update local state
+        setSubmissions((prev) => prev.filter((s) => s.id !== modalContent.id));
+        setFilteredSubmissions((prev) =>
+          prev.filter((s) => s.id !== modalContent.id)
+        );
         setModalVisible(false);
         setValidatedCount((prev) => prev + 1);
         toast.success('Appointment letter validated successfully');
         window.location.reload();
-    } else {
-      const errorData = await response.json();
-      toast.error(errorData.message || 'Failed to validate appointment letter');
+      } else {
+        const errorData = await response.json();
+        toast.error(
+          errorData.message || 'Failed to validate appointment letter'
+        );
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to validate appointment letter');
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to validate appointment letter');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleShortlistConfirm = async () => {
-  setLoading(true);
-  try {
-    const updatePromises = selectedRows.map(async (id) => {
-      const response = await fetch(`http://localhost:3000/users/update-submission-status/${id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-         status: 'VALIDATED',
-        }),
+    setLoading(true);
+    try {
+      const updatePromises = selectedRows.map(async (id) => {
+        const response = await fetch(
+          `${apiBase}/users/update-submission-status/${id}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({
+              status: 'VALIDATED',
+            }),
+          }
+        );
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || 'Failed to validate appointment letter'
+          );
+        }
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to validate appointment letter');
-      }
-    });
 
-    await Promise.all(updatePromises);
+      await Promise.all(updatePromises);
 
-    // Update local state
-    setSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
-      setFilteredSubmissions((prev) => prev.filter((s) => !selectedRows.includes(s.id)));
+      // Update local state
+      setSubmissions((prev) =>
+        prev.filter((s) => !selectedRows.includes(s.id))
+      );
+      setFilteredSubmissions((prev) =>
+        prev.filter((s) => !selectedRows.includes(s.id))
+      );
       setValidatedCount((prev) => prev + selectedRows.length);
       setSelectedRows([]);
       setShortlistModalVisible(false);
       toast.success(`${selectedRows.length} verification forms validated`);
       window.location.reload();
-  } catch (error: any) {
-    toast.error(error.message || 'Failed to validate verification forms');
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to validate verification forms');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!role || (role !== 'ADMIN' && role !== 'STAFF')) {
     return (
@@ -283,8 +331,14 @@ const Endorsement: React.FC = () => {
     {
       title: (
         <Checkbox
-          checked={selectedRows.length === filteredSubmissions.length && filteredSubmissions.length > 0}
-          indeterminate={selectedRows.length > 0 && selectedRows.length < filteredSubmissions.length}
+          checked={
+            selectedRows.length === filteredSubmissions.length &&
+            filteredSubmissions.length > 0
+          }
+          indeterminate={
+            selectedRows.length > 0 &&
+            selectedRows.length < filteredSubmissions.length
+          }
           onChange={handleSelectAll}
           disabled={statusFilter === 'VALIDATED'}
         />
@@ -292,7 +346,7 @@ const Endorsement: React.FC = () => {
       key: 'selection',
       width: 10,
       render: (_: any, record: Submission) => (
-         <Checkbox
+        <Checkbox
           checked={selectedRows.includes(record.id)}
           onChange={() => handleRowSelect(record.id)}
           disabled={statusFilter === 'VALIDATED'}
@@ -357,14 +411,26 @@ const Endorsement: React.FC = () => {
       ellipsis: true,
       render: (_: any, record: Submission) =>
         record.verificationFormUrl ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <Button
               type="link"
               onClick={(e) => {
                 e.stopPropagation();
-                showLetter(record.verificationFormUrl, 'Verification Form', record.id);
+                showLetter(
+                  record.verificationFormUrl,
+                  'Verification Form',
+                  record.id
+                );
               }}
-              icon={<EyeOutlined style={{ fontSize: '16px', color: '#5B3418' }} />}
+              icon={
+                <EyeOutlined style={{ fontSize: '16px', color: '#5B3418' }} />
+              }
             />
           </div>
         ) : (
@@ -378,14 +444,26 @@ const Endorsement: React.FC = () => {
       ellipsis: true,
       render: (_: any, record: Submission) =>
         record.appointmentLetterUrl ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <Button
               type="link"
               onClick={(e) => {
                 e.stopPropagation();
-                showLetter(record.appointmentLetterUrl, 'Appointment Letter', record.id);
+                showLetter(
+                  record.appointmentLetterUrl,
+                  'Appointment Letter',
+                  record.id
+                );
               }}
-              icon={<EyeOutlined style={{ fontSize: '16px', color: '#5B3418' }} />}
+              icon={
+                <EyeOutlined style={{ fontSize: '16px', color: '#5B3418' }} />
+              }
             />
           </div>
         ) : (
@@ -397,7 +475,9 @@ const Endorsement: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen px-2 py-4">
       <div className="w-full max-w-full mx-auto">
-        <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">Validate & Send Appt. Letters</h2>
+        <h2 className="text-xl font-bold text-[#3C3939] mb-4 text-center">
+          Validate & Send Appt. Letters
+        </h2>
         <div className="flex flex-col sm:flex-row justify-between mb-3 gap-2">
           <Space>
             <Text className="text-base font-semibold text-[#5B3418] bg-amber-100 px-3 py-1 rounded-md">
@@ -455,7 +535,12 @@ const Endorsement: React.FC = () => {
           pagination={{ pageSize: 10 }}
           onRow={(record) => ({
             onClick: (event) => {
-              if (!(event.target as HTMLElement).closest('.ant-btn, .ant-checkbox') && statusFilter !== 'VALIDATED') {
+              if (
+                !(event.target as HTMLElement).closest(
+                  '.ant-btn, .ant-checkbox'
+                ) &&
+                statusFilter !== 'VALIDATED'
+              ) {
                 handleRowSelect(record.id);
               }
             },
@@ -474,17 +559,18 @@ const Endorsement: React.FC = () => {
             >
               Download
             </Button>,
-            modalContent?.type === 'Verification Form' && statusFilter !== 'VALIDATED' && (
-              <Button
-                key="validate"
-                className="!bg-[#34515c] hover:!bg-[#2c3e50] !border-0"
-                type="primary"
-                onClick={handleValidate}
-                loading={loading}
-              >
-                Validate
-              </Button>
-            ),
+            modalContent?.type === 'Verification Form' &&
+              statusFilter !== 'VALIDATED' && (
+                <Button
+                  key="validate"
+                  className="!bg-[#34515c] hover:!bg-[#2c3e50] !border-0"
+                  type="primary"
+                  onClick={handleValidate}
+                  loading={loading}
+                >
+                  Validate
+                </Button>
+              ),
             <Button
               key="close"
               className="!bg-[#696767] hover:!bg-[#5f5d5d] !border-0"
@@ -505,26 +591,27 @@ const Endorsement: React.FC = () => {
           )}
         </Modal>
         <Modal
-        title="Confirm Validation"
-        open={shortlistModalVisible}
-        onOk={handleShortlistConfirm}
-        onCancel={() => setShortlistModalVisible(false)}
-        okText="Confirm"
-        cancelText="Cancel"
-        okButtonProps={{ className: '!bg-[#5B3418] !border-0' }}
-        cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
-      >
-        <p>
-          You are about to validate <strong>{selectedRows.length}</strong> personnel and send them
-          appointment letters.
-        </p>
-        <p>
-          Please confirm that the <strong>department placements</strong> for each personnel are correct.
-        </p>
-        <p className="text-red-600 font-semibold">
-          This action is irreversible. Are you sure you want to proceed?
-        </p>
-      </Modal>
+          title="Confirm Validation"
+          open={shortlistModalVisible}
+          onOk={handleShortlistConfirm}
+          onCancel={() => setShortlistModalVisible(false)}
+          okText="Confirm"
+          cancelText="Cancel"
+          okButtonProps={{ className: '!bg-[#5B3418] !border-0' }}
+          cancelButtonProps={{ className: '!bg-[#c95757] !border-0' }}
+        >
+          <p>
+            You are about to validate <strong>{selectedRows.length}</strong>{' '}
+            personnel and send them appointment letters.
+          </p>
+          <p>
+            Please confirm that the <strong>department placements</strong> for
+            each personnel are correct.
+          </p>
+          <p className="text-red-600 font-semibold">
+            This action is irreversible. Are you sure you want to proceed?
+          </p>
+        </Modal>
       </div>
     </div>
   );
