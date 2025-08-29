@@ -120,7 +120,7 @@ const Onboarding: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const apiBase = import.meta.env.VITE_BASE_URL;
       const response = await axios.post(
         `${apiBase}/auth/init-onboarding`,
         { nssNumber, email, phoneNumber }, // Include phoneNumber in the payload

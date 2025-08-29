@@ -65,7 +65,7 @@ const Home: React.FC = () => {
     const fetchReportCounts = async () => {
       try {
         const apiBase =
-          import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+          import.meta.env.VITE_BASE_URL;
         const response = await axios.get(`${apiBase}/users/reports-counts`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
@@ -89,8 +89,7 @@ const Home: React.FC = () => {
     const fetchPersonnelStatus = async () => {
       try {
         const token = localStorage.getItem('token');
-        const apiBase =
-          import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+        const apiBase = import.meta.env.VITE_BASE_URL;
         const response = await fetch(`${apiBase}/users/personnel-status`, {
           method: 'GET',
           headers: {

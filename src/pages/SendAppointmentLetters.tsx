@@ -21,7 +21,7 @@ import { saveAs } from 'file-saver';
 import { useAuth } from '../AuthContext';
 import '../components/PersonnelSelection.css';
 
-const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+const apiBase = import.meta.env.VITE_BASE_URL;
 const getAbsoluteUrl = (url: string) =>
   url && url.startsWith('http') ? url : `${apiBase}${url || ''}`;
 

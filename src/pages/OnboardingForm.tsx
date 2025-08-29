@@ -64,8 +64,7 @@ const OnboardingForm: React.FC = () => {
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
-        const apiBase =
-          import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+        const apiBase = import.meta.env.VITE_BASE_URL;
         const response = await fetch(`${apiBase}/users/ghana-universities`, {
           headers: { 'Content-Type': 'application/json' },
         });
@@ -89,8 +88,7 @@ const OnboardingForm: React.FC = () => {
           navigate('/login'); // Redirect to login if no token
           return;
         }
-        const apiBase =
-          import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+        const apiBase = import.meta.env.VITE_BASE_URL;
         const response = await fetch(`${apiBase}/users/onboarding-status`, {
           method: 'GET',
           headers: {
@@ -135,7 +133,7 @@ const OnboardingForm: React.FC = () => {
   const checkOnboardingStatus = async () => {
     try {
       const token = localStorage.getItem('token');
-      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const apiBase = import.meta.env.VITE_BASE_URL;
       const response = await fetch(`${apiBase}/users/onboarding-status`, {
         method: 'GET',
         headers: {
@@ -188,7 +186,7 @@ const OnboardingForm: React.FC = () => {
     }
 
     try {
-      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const apiBase = import.meta.env.VITE_BASE_URL;
       const response = await fetch(`${apiBase}/users/submit-onboarding`, {
         method: 'POST',
         headers: {

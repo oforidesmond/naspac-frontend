@@ -47,7 +47,7 @@ const ForgotPassword: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const apiBase = import.meta.env.VITE_BASE_URL;
       const response = await axios.post(
         `${apiBase}/auth/request-forgot-password`,
         { email }

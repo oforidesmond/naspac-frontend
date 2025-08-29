@@ -7,7 +7,7 @@ import { saveAs } from 'file-saver';
 import { useAuth } from '../AuthContext';
 import '../components/PersonnelSelection.css';
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const apiBase = import.meta.env.VITE_BASE_URL;
 const getAbsoluteUrl = (url: string) => (url && url.startsWith('http') ? url : `${apiBase}${url || ''}`);
 
 const { Option } = Select;
@@ -216,7 +216,7 @@ useEffect(() => {
     setLoading(true);
     try {
       const updatePromises = selectedRows.map(async (id) => {
-        const response = await fetch(`http://localhost:3000/users/update-submission-status/${id}`, {
+        const response = await fetch(`${apiBase}/users/update-submission-status/${id}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -233,7 +233,7 @@ useEffect(() => {
 
      const updatedSubmissionIds = await Promise.all(updatePromises);
 
-    const assignResponse = await fetch('http://localhost:3000/users/assign-personnel-to-department', {
+    const assignResponse = await fetch(`${apiBase}/users/assign-personnel-to-department`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -269,7 +269,7 @@ useEffect(() => {
   setLoading(true);
   try {
     const updatePromises = selectedRows.map(async (id) => {
-      const response = await fetch(`http://localhost:3000/users/update-submission-status/${id}`, {
+      const response = await fetch(`${apiBase}/users/update-submission-status/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

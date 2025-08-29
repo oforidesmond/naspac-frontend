@@ -19,6 +19,7 @@ import type { UploadFile, UploadProps } from 'antd';
 import './Profile.css';
 
 const { Title, Text } = Typography;
+const apiBase = import.meta.env.VITE_BASE_URL;
 
 interface UserProfile {
   name: string;
@@ -69,8 +70,6 @@ const Profile: React.FC = () => {
 
       try {
         setProfileLoading(true);
-        const apiBase =
-          import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
         const response = await axios.get(`${apiBase}/users/profile`, {
           headers: {
             'Content-Type': 'application/json',

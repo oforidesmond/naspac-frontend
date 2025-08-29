@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import { useAuth } from '../AuthContext';
 import { SafetyOutlined } from '@ant-design/icons';
+import { Switch } from 'antd'; // Import Ant Design Switch
 
 const PersonnelLogin: React.FC = () => {
   const [nssNumber, setNssNumber] = useState('');
@@ -52,7 +53,7 @@ const PersonnelLogin: React.FC = () => {
 
   const checkOnboardingStatus = async (token: string) => {
     try {
-      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const apiBase = import.meta.env.VITE_BASE_URL;
       const response = await fetch(`${apiBase}/users/onboarding-status`, {
         method: 'GET',
         headers: {
@@ -89,7 +90,7 @@ const PersonnelLogin: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const apiBase = import.meta.env.VITE_BASE_URL;
       const response = await fetch(`${apiBase}/auth/login-personnel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,7 +146,7 @@ const PersonnelLogin: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const apiBase = import.meta.env.VITE_BASE_URL;
       const response = await fetch(`${apiBase}/auth/verifyTfa`, {
         method: 'POST',
         headers: {
@@ -214,7 +215,7 @@ const PersonnelLogin: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      const apiBase = import.meta.env.VITE_BASE_URL;
       const response = await fetch(`${apiBase}/auth/resendTfa`, {
         method: 'POST',
         headers: {
@@ -239,33 +240,14 @@ const PersonnelLogin: React.FC = () => {
     }
   };
 
-  const handleStaffLoginRedirect = () => {
-    navigate('/staff-login');
+  const handleToggleChange = (checked: boolean) => {
+    if (checked) {
+      navigate('/staff-login');
+    }
   };
 
   return (
     <div className="flex flex-row justify-center w-full min-h-screen relative">
-      <button
-        onClick={handleStaffLoginRedirect}
-        className="absolute z-50 top-2 left-2 w-12 h-12 opacity-100 hover:opacity-120 focus:outline-none"
-        aria-label="Staff Login"
-      >
-        <svg
-          className="w-6 h-6 text-gray-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-        </svg>
-      </button>
-
       <ToastContainer />
       <Carousel images={images} />
 
@@ -428,7 +410,14 @@ const PersonnelLogin: React.FC = () => {
                     )}
                   </button>
                 </div>
-                <div className="text-right">
+                <div className="flex justify-between items-center">
+                  <Switch
+                    checked={false}
+                    onChange={handleToggleChange}
+                    checkedChildren="Staff"
+                    unCheckedChildren="Personnel"
+                    className="bg-gray-300 [&.ant-switch-checked]:!bg-gray-300"
+                  />
                   <a
                     href="/forgot-password"
                     className="font-['Poppins',Helvetica] text-xs sm:text-sm text-[#5b3418] hover:underline"

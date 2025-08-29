@@ -7,7 +7,7 @@ import { saveAs } from 'file-saver';
 import { useAuth } from '../AuthContext';
 import '../components/PersonnelSelection.css';
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const apiBase = import.meta.env.VITE_BASE_URL;
 const getAbsoluteUrl = (url: string) => (url && url.startsWith('http') ? url : `${apiBase}${url || ''}`);
 
 const { Option } = Select;
@@ -51,7 +51,7 @@ const Endorsement: React.FC = () => {
   useEffect(() => {
     const fetchEndorsedCount = async () => {
       try {
-        const response = await fetch('http://localhost:3000/users/submission-status-counts', {
+        const response = await fetch(`${apiBase}/users/submission-status-counts`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ const Endorsement: React.FC = () => {
     const fetchSubmissions = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/users/submissions', {
+        const response = await fetch(`${apiBase}/users/submissions`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -195,7 +195,7 @@ const Endorsement: React.FC = () => {
    console.log('Endorsing submission:', modalContent.id);
   setLoading(true);
   try {
-    const response = await fetch('http://localhost:3000/documents/sign', {
+    const response = await fetch(`${apiBase}/documents/sign`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -230,7 +230,7 @@ const Endorsement: React.FC = () => {
   setLoading(true);
   try {
     const updatePromises = selectedRows.map(async (id) => {
-      const response = await fetch('http://localhost:3000/documents/sign', {
+      const response = await fetch(`${apiBase}/documents/sign`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -268,7 +268,7 @@ const Endorsement: React.FC = () => {
   setLoading(true);
   try {
     const updatePromises = selectedRows.map(async (id) => {
-      const response = await fetch(`http://localhost:3000/users/update-submission-status/${id}`, {
+      const response = await fetch(`${apiBase}/users/update-submission-status/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

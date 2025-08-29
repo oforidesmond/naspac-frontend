@@ -46,7 +46,7 @@ const StaffManagement: React.FC = () => {
   const [editForm] = Form.useForm();
 
   // Define API base URL
-  const apiBase = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+  const apiBase = import.meta.env.VITE_BASE_URL;
 
   useEffect(() => {
     const fetchStaff = async () => {

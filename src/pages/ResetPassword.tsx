@@ -9,6 +9,8 @@ import Input from "../components/Input";
 import Button from "../components/Button";
 import Carousel from "../components/Carousel";
 
+const apiBase = import.meta.env.VITE_BASE_URL;
+
 const ResetPassword: React.FC = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -99,8 +101,8 @@ const ResetPassword: React.FC = () => {
 
     try {
         const endpoint = nssNumber
-        ? "http://localhost:3000/auth/onboarding-reset-password"
-        : "http://localhost:3000/auth/forgot-password";
+        ? `${apiBase}/auth/onboarding-reset-password`
+  : `${apiBase}/auth/forgot-password`;
       const payload = nssNumber
         ? { nssNumber, token, password, confirmPassword }
         : { token, password };

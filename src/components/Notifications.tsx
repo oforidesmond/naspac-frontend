@@ -7,6 +7,7 @@ import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const { Text } = Typography;
+const apiBase = import.meta.env.VITE_BASE_URL;
 
 interface Notification {
   id: number;
@@ -39,7 +40,7 @@ const Notifications: React.FC<NotificationsProps> = ({
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/documents/notifications', {
+        const response = await axios.get(`${apiBase}/documents/notifications`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         const oneMonthAgo = moment().subtract(1, 'month');

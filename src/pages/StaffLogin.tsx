@@ -1,21 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import Card from "../components/Card";
-import CardContent from "../components/CardContent";
-import Input from "../components/Input";
-import Button from "../components/Button";
-import Carousel from "../components/Carousel";
-import { useAuth } from "../AuthContext";
-import { SafetyOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import Card from '../components/Card';
+import CardContent from '../components/CardContent';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import Carousel from '../components/Carousel';
+import { useAuth } from '../AuthContext';
+import { SafetyOutlined } from '@ant-design/icons';
+import { Switch } from 'antd'; // Import Ant Design Switch
+
+const apiBase = import.meta.env.VITE_BASE_URL;
 
 const StaffLogin: React.FC = () => {
-  const [staffId, setStaffId] = useState("");
-  const [password, setPassword] = useState("");
+  const [staffId, setStaffId] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [is2FAStep, setIs2FAStep] = useState(false);
-  const [tfaToken, setTfaToken] = useState("");
+  const [tfaToken, setTfaToken] = useState('');
   const [tempAccessToken, setTempAccessToken] = useState<string | null>(null);
   const [resendAttempts, setResendAttempts] = useState(0);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -26,13 +29,13 @@ const StaffLogin: React.FC = () => {
   const COOLDOWN_SECONDS = 180;
 
   const images: string[] = [
-    "/carousel-image-1.jpg",
-    "/carousel-image-2.jpg",
-    "/carousel-image-3.jpg",
-    "/carousel-image-4.png",
-    "/carousel-image-5.jpg",
-    "/carousel-image-6.jpg",
-    "/carousel-image-7.jpg",
+    '/carousel-image-1.jpg',
+    '/carousel-image-2.jpg',
+    '/carousel-image-3.jpg',
+    '/carousel-image-4.png',
+    '/carousel-image-5.jpg',
+    '/carousel-image-6.jpg',
+    '/carousel-image-7.jpg',
   ];
 
   // Cooldown timer effect
@@ -63,8 +66,8 @@ const StaffLogin: React.FC = () => {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!staffId.trim() || !password.trim()) {
-      toast.error("Please enter both Staff ID and Password", {
-        position: "top-right",
+      toast.error('Please enter both Staff ID and Password', {
+        position: 'top-right',
         autoClose: 3000,
       });
       return;
@@ -73,11 +76,11 @@ const StaffLogin: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/auth/login-staff-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch(`${apiBase}/auth/login-staff-admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ staffId, password }),
-        credentials: "include",
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -87,27 +90,27 @@ const StaffLogin: React.FC = () => {
         setIs2FAStep(true);
         setResendAttempts(0);
         setResendCooldown(0);
-        toast.info("OTP sent to your phone number. Please enter the code.", {
-          position: "top-right",
+        toast.info('OTP sent to your phone number. Please enter the code.', {
+          position: 'top-right',
           autoClose: 10000,
         });
-      } else if (data.accessToken && (data.role === "ADMIN" || data.role === "STAFF" || data.role === "SUPERVISOR")) {
-        localStorage.setItem("token", data.accessToken);
+      } else if (data.accessToken && (data.role === 'ADMIN' || data.role === 'STAFF' || data.role === 'SUPERVISOR')) {
+        localStorage.setItem('token', data.accessToken);
         setRole(data.role);
-        toast.success("Login successful!", {
-          position: "top-right",
+        toast.success('Login successful!', {
+          position: 'top-right',
           autoClose: 2000,
         });
-        navigate("/");
+        navigate('/');
       } else {
-        toast.error(data.message || "Access denied. Staff only access.", {
-          position: "top-right",
+        toast.error(data.message || 'Access denied. Staff only access.', {
+          position: 'top-right',
           autoClose: 3000,
         });
       }
     } catch (error) {
-      toast.error("Login failed. Please try again.", {
-        position: "top-right",
+      toast.error('Login failed. Please try again.', {
+        position: 'top-right',
         autoClose: 3000,
       });
     } finally {
@@ -117,8 +120,8 @@ const StaffLogin: React.FC = () => {
 
   const handle2FASubmit = async () => {
     if (!tempAccessToken) {
-      toast.error("No pending 2FA verification. Please log in again.", {
-        position: "top-right",
+      toast.error('No pending 2FA verification. Please log in again.', {
+        position: 'top-right',
         autoClose: 3000,
       });
       setIs2FAStep(false);
@@ -126,33 +129,33 @@ const StaffLogin: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/auth/verifyTfa", {
-        method: "POST",
+      const response = await fetch(`${apiBase}/auth/verifyTfa`, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${tempAccessToken}`,
         },
         body: JSON.stringify({ tfaToken }),
-        credentials: "include",
+        credentials: 'include',
       });
       const data = await response.json();
-      if (data.accessToken && (data.role === "ADMIN" || data.role === "STAFF" || data.role === "SUPERVISOR")) {
-        localStorage.setItem("token", data.accessToken);
+      if (data.accessToken && (data.role === 'ADMIN' || data.role === 'STAFF' || data.role === 'SUPERVISOR')) {
+        localStorage.setItem('token', data.accessToken);
         setRole(data.role);
-        toast.success("2FA verification successful!", {
-          position: "top-right",
+        toast.success('2FA verification successful!', {
+          position: 'top-right',
           autoClose: 2000,
         });
-        navigate("/");
+        navigate('/');
       } else {
-        toast.error(data.message || "Invalid OTP. Please try again.", {
-          position: "top-right",
+        toast.error(data.message || 'Invalid OTP. Please try again.', {
+          position: 'top-right',
           autoClose: 3000,
         });
       }
     } catch (error) {
-      toast.error("2FA verification failed. Please try again.", {
-        position: "top-right",
+      toast.error('2FA verification failed. Please try again.', {
+        position: 'top-right',
         autoClose: 3000,
       });
     } finally {
@@ -162,8 +165,8 @@ const StaffLogin: React.FC = () => {
 
   const handleResendOTP = async () => {
     if (!tempAccessToken) {
-      toast.error("No pending 2FA verification. Please log in again.", {
-        position: "top-right",
+      toast.error('No pending 2FA verification. Please log in again.', {
+        position: 'top-right',
         autoClose: 3000,
       });
       setIs2FAStep(false);
@@ -171,8 +174,8 @@ const StaffLogin: React.FC = () => {
     }
 
     if (resendAttempts >= MAX_RESEND_ATTEMPTS) {
-      toast.error("Maximum OTP resend attempts reached. Please log in again.", {
-        position: "top-right",
+      toast.error('Maximum OTP resend attempts reached. Please log in again.', {
+        position: 'top-right',
         autoClose: 3000,
       });
       setIs2FAStep(false);
@@ -182,7 +185,7 @@ const StaffLogin: React.FC = () => {
 
     if (resendCooldown > 0) {
       toast.info(`Please wait ${resendCooldown} seconds before resending OTP.`, {
-        position: "top-right",
+        position: 'top-right',
         autoClose: 3000,
       });
       return;
@@ -190,27 +193,33 @@ const StaffLogin: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/auth/resendTfa", {
-        method: "POST",
+      const response = await fetch(`${apiBase}/auth/resendTfa`, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${tempAccessToken}`,
         },
       });
       const data = await response.json();
       setResendAttempts((prev) => prev + 1);
       setResendCooldown(COOLDOWN_SECONDS);
-      toast.success(data.message || "OTP resent to your phone.", {
-        position: "top-right",
+      toast.success(data.message || 'OTP resent to your phone.', {
+        position: 'top-right',
         autoClose: 3000,
       });
     } catch (error) {
-      toast.error("Failed to resend OTP. Please try again.", {
-        position: "top-right",
+      toast.error('Failed to resend OTP. Please try again.', {
+        position: 'top-right',
         autoClose: 3000,
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleChange = (checked: boolean) => {
+    if (!checked) {
+      navigate('/login');
     }
   };
 
@@ -256,12 +265,12 @@ const StaffLogin: React.FC = () => {
                     onClick={handleResendOTP}
                     className={`font-['Poppins',Helvetica] text-xs sm:text-sm text-[#5b3418] hover:underline cursor-pointer ${
                       isLoading || resendCooldown > 0 || resendAttempts >= MAX_RESEND_ATTEMPTS
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''
                     }`}
                     disabled={isLoading || resendCooldown > 0 || resendAttempts >= MAX_RESEND_ATTEMPTS}
                   >
-                    {resendCooldown > 0 ? `Resend OTP (${resendCooldown}s)` : "Resend OTP"}
+                    {resendCooldown > 0 ? `Resend OTP (${resendCooldown}s)` : 'Resend OTP'}
                   </button>
                 </div>
               </>
@@ -294,7 +303,7 @@ const StaffLogin: React.FC = () => {
                   <Input
                     placeholder="Password*"
                     className="text-black font-normal"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     icon={
@@ -358,7 +367,14 @@ const StaffLogin: React.FC = () => {
                     )}
                   </button>
                 </div>
-                <div className="text-right">
+                <div className="flex justify-between items-center">
+                  <Switch
+                    checked={true}
+                    onChange={handleToggleChange}
+                    checkedChildren="Staff"
+                    unCheckedChildren="Personnel"
+                    className="bg-gray-300 [&.ant-switch-checked]:!bg-gray-300"
+                  />
                   <a
                     href="/forgot-password"
                     className="font-['Poppins',Helvetica] text-xs sm:text-sm text-[#5b3418] hover:underline"
@@ -369,7 +385,7 @@ const StaffLogin: React.FC = () => {
               </>
             )}
             <Button className="cursor-pointer" type="submit" disabled={isLoading}>
-              {isLoading ? "Processing..." : is2FAStep ? "Verify OTP" : "Sign In"}
+              {isLoading ? 'Processing...' : is2FAStep ? 'Verify OTP' : 'Sign In'}
             </Button>
           </form>
         </CardContent>

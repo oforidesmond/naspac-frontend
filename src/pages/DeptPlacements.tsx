@@ -10,6 +10,7 @@ import '../components/PersonnelSelection.css';
 const { Option } = Select;
 const { Text } = Typography;
 const { TabPane } = Tabs;
+const apiBase = import.meta.env.VITE_BASE_URL;
 
 interface Department {
   id: number;
@@ -66,7 +67,7 @@ const DepartmentPlacements: React.FC = () => {
     const fetchDepartmentsAndPersonnel = async () => {
       setLoading(true);
       try {
-        const deptResponse = await fetch('http://localhost:3000/users/departments', {
+        const deptResponse = await fetch(`${apiBase}/users/departments`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -77,7 +78,7 @@ const DepartmentPlacements: React.FC = () => {
           throw new Error((deptData as any).message || 'Failed to load departments');
         }
 
-        const personnelResponse = await fetch('http://localhost:3000/users/personnel', {
+        const personnelResponse = await fetch(`${apiBase}/users/personnel`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ const DepartmentPlacements: React.FC = () => {
 
     const fetchSupervisors = async () => {
       try {
-        const response = await fetch('http://localhost:3000/users/staff', {
+        const response = await fetch(`${apiBase}/users/staff`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -183,7 +184,7 @@ const DepartmentPlacements: React.FC = () => {
   const handleCreateDepartment = async (values: { name: string; supervisorId: number }) => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/users/create-department', {
+      const response = await fetch(`${apiBase}/users/create-department`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -230,7 +231,7 @@ const DepartmentPlacements: React.FC = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/users/department/${selectedEditDepartment}`, {
+      const response = await fetch(`${apiBase}/users/department/${selectedEditDepartment}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -283,7 +284,7 @@ const DepartmentPlacements: React.FC = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/users/department/${selectedEditDepartment}`, {
+      const response = await fetch(`${apiBase}/users/department/${selectedEditDepartment}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -316,7 +317,7 @@ const DepartmentPlacements: React.FC = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/users/change-department', {
+      const response = await fetch(`${apiBase}/users/change-department`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

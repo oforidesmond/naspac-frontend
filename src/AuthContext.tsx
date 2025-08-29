@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
+const apiBase = import.meta.env.VITE_BASE_URL;
+
 interface AuthContextType {
   role: 'ADMIN' | 'STAFF' | 'SUPERVISOR' | 'PERSONNEL' | null;
   userId: number | null;
@@ -38,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         // Validate token
-        const validateResponse = await fetch('http://localhost:3000/auth/validate', {
+        const validateResponse = await fetch(`${apiBase}/auth/validate`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -59,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setName(validateData.name || null);
 
         // Fetch latest profile data
-        const profileResponse = await fetch('http://localhost:3000/users/profile', {
+        const profileResponse = await fetch(`${apiBase}/users/profile`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -94,7 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:3000/auth/logout', {
+      await fetch(`${apiBase}/auth/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

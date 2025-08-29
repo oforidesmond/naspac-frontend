@@ -13,6 +13,7 @@ import './Sidebar.css';
 import { useAuth } from '../AuthContext';
 
 const { Sider } = Layout;
+const apiBase = import.meta.env.VITE_BASE_URL;
 
 interface PersonnelStatus {
   submissionStatus: string | null;
@@ -53,7 +54,7 @@ const Sidebar: React.FC = () => {
 
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:3000/users/personnel-status', {
+        const response = await fetch(`${apiBase}/users/personnel-status`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -106,7 +107,7 @@ const Sidebar: React.FC = () => {
       formData.append('verificationForm', file);
 
       try {
-        const response = await fetch('http://localhost:3000/users/submit-verification-form', {
+        const response = await fetch(`${apiBase}/users/submit-verification-form`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -124,7 +125,7 @@ const Sidebar: React.FC = () => {
         setHasUploaded(true); 
         // Refresh status
         const token = localStorage.getItem('token');
-        const statusResponse = await fetch('http://localhost:3000/users/personnel-status', {
+        const statusResponse = await fetch(`${apiBase}/users/personnel-status`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -284,7 +285,7 @@ const Sidebar: React.FC = () => {
       // Handle download for Endorsed Posting Letter
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:3000/documents/personnel/download-appointment-letter?type=endorsed', {
+        const response = await fetch(`${apiBase}/documents/personnel/download-appointment-letter?type=endorsed`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/pdf',
@@ -321,7 +322,7 @@ const Sidebar: React.FC = () => {
       setAppointmentLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:3000/documents/personnel/download-appointment-letter?type=job_confirmation', {
+        const response = await fetch(`${apiBase}/documents/personnel/download-appointment-letter?type=job_confirmation`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/pdf',
